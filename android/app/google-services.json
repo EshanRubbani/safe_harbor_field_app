@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "995246260968",
+    "project_id": "safe-harbor-db2cd",
+    "storage_bucket": "safe-harbor-db2cd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995246260968:android:6ac9c0c25889ac91413f5d",
+        "android_client_info": {
+          "package_name": "com.example.safe_harbor_field_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArtf3BI9Gc8jwG1EvoSwyNVxYszu5cmNc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
