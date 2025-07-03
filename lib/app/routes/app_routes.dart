@@ -8,6 +8,8 @@ abstract class AppRoutes {
   static const PROFILE = '/profile';
   static const inspection_photos = '/inspection-photos';
   static const inspection_questionaire = '/inspection-questionnaire';
+  static const inspection_report = '/inspection-report';
+
 
 
 }

@@ -3,6 +3,7 @@ import 'package:safe_harbor_field_app/app/views/Login/login_view.dart';
 import 'package:safe_harbor_field_app/app/views/home/home_view.dart';
 import 'package:safe_harbor_field_app/app/views/inspection/inspection_photos_view.dart';
 import 'package:safe_harbor_field_app/app/views/inspection/inspection_questionaire_view.dart';
+import 'package:safe_harbor_field_app/app/views/inspection/inspection_report_view.dart';
 import 'package:safe_harbor_field_app/app/views/splash/splash_view.dart';
 import 'app_routes.dart';
 
@@ -30,7 +31,11 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.inspection_questionaire,
-      page: () => InspectionQuestionaireView(),
+      page: () => InspectionQuestionnaireView(),
+    ),
+     GetPage(
+      name: AppRoutes.inspection_report,
+      page: () => InspectionReportView(),
     ),
   ];
 }
