@@ -7,5 +7,7 @@ abstract class AppRoutes {
   static const CART = '/cart';
   static const PROFILE = '/profile';
   static const inspection_photos = '/inspection-photos';
+  static const inspection_questionaire = '/inspection-questionnaire';
+
 
 }
