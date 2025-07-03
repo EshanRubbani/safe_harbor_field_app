@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:safe_harbor_field_app/app/controllers/inspection_photos_controller.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
 import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
-import 'package:safe_harbor_field_app/app/utils/photos_section_widget.dart';
+import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
+import 'package:safe_harbor_field_app/app/utils/form_section_widget.dart';
 
-
-class InspectionQuestionaireView extends StatelessWidget {
-  const InspectionQuestionaireView({super.key});
+class InspectionQuestionnaireView extends StatelessWidget {
+  const InspectionQuestionnaireView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final InspectionPhotosController controller = Get.put(InspectionPhotosController());
-    
+    // Register the service before the controller
+    final QuestionnaireService service = Get.put(QuestionnaireService());
+    final QuestionnaireController controller =
+        Get.put(QuestionnaireController());
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -27,129 +30,215 @@ class InspectionQuestionaireView extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-          _buildHeaderCard(colorScheme, theme),
-          
-                    const SizedBox(height: 20),
-          
-                    // // Primary Risk Photo Section
-                    // Obx(() => PhotoSection(
-                    //   icon: Icons.warning_amber_rounded,
-                    //   title: 'Primary Risk Photo',
-                    //   description: 'A single photo highlighting the primary risk or concern.',
-                    //   photoType: 'primary_risk',
-                    //   photos: controller.primaryRiskPhotos,
-                    //   photoCountText: controller.getPhotoCountText('primary_risk'),
-                    //   isRequired: true,
-                    //   hasError: controller.hasPrimaryRiskError.value,
-                    //   errorMessage: controller.primaryRiskErrorMessage.value,
-                    //   onAddPhoto: () => controller.showPhotoSourceDialog('primary_risk'),
-                    //   onRemovePhoto: (index) => controller.removePhoto('primary_risk', index),
-                    // )),
-          
-                    // // Front Elevation Photo Section
-                    // Obx(() => PhotoSection(
-                    //   icon: Icons.home_outlined,
-                    //   title: 'Front Elevation',
-                    //   description: 'Photos of the front view of the property.',
-                    //   photoType: 'front_elevation',
-                    //   photos: controller.frontElevationPhotos,
-                    //   photoCountText: controller.getPhotoCountText('front_elevation'),
-                    //   onAddPhoto: () => controller.showPhotoSourceDialog('front_elevation'),
-                    //   onRemovePhoto: (index) => controller.removePhoto('front_elevation', index),
-                    // )),
-          
-                    // // Right Elevation Photo Section
-                    // Obx(() => PhotoSection(
-                    //   icon: Icons.turn_right_rounded,
-                    //   title: 'Right Elevation',
-                    //   description: 'Photos of the right side view of the property.',
-                    //   photoType: 'right_elevation',
-                    //   photos: controller.rightElevationPhotos,
-                    //   photoCountText: controller.getPhotoCountText('right_elevation'),
-                    //   onAddPhoto: () => controller.showPhotoSourceDialog('right_elevation'),
-                    //   onRemovePhoto: (index) => controller.removePhoto('right_elevation', index),
-                    // )),
-          
-                    // // Rear Elevation Photo Section
-                    // Obx(() => PhotoSection(
-                    //   icon: Icons.flip_camera_android_outlined,
-                    //   title: 'Rear Elevation',
-                    //   description: 'Photos of the rear view of the property.',
-                    //   photoType: 'rear_elevation',
-                    //   photos: controller.rearElevationPhotos,
-                    //   photoCountText: controller.getPhotoCountText('rear_elevation'),
-                    //   onAddPhoto: () => controller.showPhotoSourceDialog('rear_elevation'),
-                    //   onRemovePhoto: (index) => controller.removePhoto('rear_elevation', index),
-                    // )),
-          
-                    // // Roof Photo Section
-                    // Obx(() => PhotoSection(
-                    //   icon: Icons.roofing_outlined,
-                    //   title: 'Roof Photo',
-                    //   description: 'Photos of the roof and roofing materials.',
-                    //   photoType: 'roof',
-                    //   photos: controller.roofPhotos,
-                    //   photoCountText: controller.getPhotoCountText('roof'),
-                    //   onAddPhoto: () => controller.showPhotoSourceDialog('roof'),
-                    //   onRemovePhoto: (index) => controller.removePhoto('roof', index),
-                    // )),
-          
-                    // // Additional Photos Section
-                    // Obx(() => PhotoSection(
-                    //   icon: Icons.add_photo_alternate_outlined,
-                    //   title: 'Additional Photos',
-                    //   description: 'Any additional photos that may be relevant to the inspection.',
-                    //   photoType: 'additional',
-                    //   photos: controller.additionalPhotos,
-                    //   photoCountText: controller.getPhotoCountText('additional'),
-                    //   onAddPhoto: () => controller.showPhotoSourceDialog('additional'),
-                    //   onRemovePhoto: (index) => controller.removePhoto('additional', index),
-                    // )),
-          
-                    const SizedBox(height: 100), // Space for floating button
-                  ],
-                ),
-              ),
-            ),
+          child: Column(
+            children: [
+              // Header Card
+
+              // Loading State
+              Obx(() {
+                if (controller.isLoading) {
+                  return const Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                if (controller.error.isNotEmpty) {
+                  return Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading questions',
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            controller.error,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.error,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => service.loadQuestions(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (controller.sections.isEmpty) {
+                  return Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.quiz_outlined,
+                            size: 48,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No questions available',
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Initialize default questions to get started',
+                            style: theme.textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: controller.initializeDefaultQuestions,
+                            child: const Text('Initialize Questions'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // Form Content
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          _buildHeaderCard(colorScheme, theme),
+
+                          const SizedBox(height: 20),
+
+                          // Dynamic Sections
+                          ...controller.sections.map(
+                            (section) => Obx(() => FormSectionWidget(
+                                  title: section.title,
+                                  icon: section.icon ?? Icons.quiz_outlined,
+                                  isExpanded:
+                                      controller.isSectionExpanded(section.id),
+                                  onToggle: () =>
+                                      controller.toggleSection(section.id),
+                                  children: section.questions
+                                      .asMap()
+                                      .entries
+                                      .map(
+                                        (entry) => Obx(() {
+                                          final question = entry.value;
+                                          final questionNumber = entry.key + 1;
+                                          final hasError = controller
+                                                  .fieldErrors[question.id] ==
+                                              true;
+                                          // Pass the numbered label to the widget
+                                          return service.getWidgetForQuestion(
+                                            question,
+                                            labelPrefix: '$questionNumber. ',
+                                            currentValue: controller
+                                                .getFormValue(question.id)
+                                                ?.toString(),
+                                            onChanged: (value) =>
+                                                controller.updateFormData(
+                                                    question.id, value),
+                                            validator: (value) =>
+                                                controller.validateQuestion(
+                                                    question, value),
+                                            hasError: hasError, // Pass error state to widget
+                                          );
+                                        }),
+                                      )
+                                      .toList(),
+                                )),
+                          ),
+
+                          const SizedBox(
+                              height: 100), // Space for floating button
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
         ),
       ),
-      
+
       // Floating Action Button
-      floatingActionButton: Obx(() => controller.totalPhotoCount > 0 
-        ? FloatingActionButton.extended(
-            onPressed: () {
-              if (controller.validateForm()) {
-                Get.snackbar(
-                  'Success', 
-                  'All photos collected successfully! Total: ${controller.totalPhotoCount}',
-                  snackPosition: SnackPosition.TOP,
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
-                Get.toNamed(AppRoutes.inspection_questionaire);
-              }
-            },
-            icon: Icon(Icons.check_circle_outline_rounded),
-            label: Text('Submit Questionnaire'),
-            
-            backgroundColor: colorScheme.primary,
-            foregroundColor: Colors.white,
-          )
-        : const SizedBox.shrink(),
+      floatingActionButton: Obx(() => AnimatedScale(
+            scale: controller.isFormValid.value ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: controller.isFormValid.value
+                ? FloatingActionButton.extended(
+                    onPressed: () {
+                      if (controller.submitForm()) {
+                        // Navigate to next screen or perform action
+                        Get.toNamed(AppRoutes.inspection_report);
+                      }
+                    },
+                    icon: const Icon(Icons.check_circle_outline_rounded),
+                    label: const Text('Submit Questionnaire'),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  )
+                : const SizedBox.shrink(),
+          )),
+
+      // App Bar with actions
+      appBar: AppBar(
+        title: const Text(''),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          // // Initialize Questions Button (temporary)
+          // Obx(() {
+          //   if (controller.sections.isEmpty && !controller.isLoading) {
+          //     return TextButton.icon(
+          //       onPressed: controller.initializeDefaultQuestions,
+          //       icon:
+          //           Icon(Icons.add_circle_outline, color: colorScheme.primary),
+          //       label: Text('Init Questions',
+          //           style: TextStyle(color: colorScheme.primary)),
+          //     );
+          //   }
+          //   return const SizedBox.shrink();
+          // }),
+
+          // Save Draft Button
+          TextButton.icon(
+            onPressed: controller.saveDraft,
+            icon: Icon(Icons.save_rounded, color: colorScheme.primary),
+            label: Text('Save Draft',
+                style: TextStyle(color: colorScheme.primary)),
+          ),
+
+          // // Refresh Button
+          // IconButton(
+          //   onPressed: () => service.loadQuestions(),
+          //   icon: Icon(Icons.refresh, color: colorScheme.primary),
+          //   tooltip: 'Refresh Questions',
+          // ),
+        ],
       ),
     );
   }
 
   Widget _buildHeaderCard(ColorScheme colorScheme, ThemeData theme) {
     return Container(
-      // margin: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.all(16.0),
       child: Card(
         elevation: 8,
         shadowColor: Colors.black.withOpacity(0.1),
