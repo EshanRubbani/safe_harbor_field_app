@@ -243,4 +243,17 @@ class InspectionPhotosController extends GetxController {
       rearElevationPhotos.length +
       roofPhotos.length +
       additionalPhotos.length;
+  
+  // Clear all photo data and errors
+  void clearData() {
+    primaryRiskPhotos.clear();
+    frontElevationPhotos.clear();
+    rightElevationPhotos.clear();
+    rearElevationPhotos.clear();
+    roofPhotos.clear();
+    additionalPhotos.clear();
+    isLoading.value = false;
+    hasPrimaryRiskError.value = false;
+    primaryRiskErrorMessage.value = '';
+  }
 }
