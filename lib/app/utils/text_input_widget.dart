@@ -64,7 +64,7 @@ class TextInputWidget extends StatelessWidget {
           // Text Input Field
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(4.0),
               border: Border.all(
                 color: hasError
                     ? colorScheme.error
