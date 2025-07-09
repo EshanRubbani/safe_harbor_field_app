@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../app/controllers/inspection_reports_controller.dart';
 
 class PhotoSection extends StatelessWidget {
   final IconData icon;
@@ -14,6 +15,7 @@ class PhotoSection extends StatelessWidget {
   final VoidCallback? onAddPhoto;
   final Function(int index)? onRemovePhoto;
   final String photoCountText;
+  final bool viewOnly;
 
   const PhotoSection({
     super.key,
@@ -28,6 +30,7 @@ class PhotoSection extends StatelessWidget {
     this.errorMessage,
     this.onAddPhoto,
     this.onRemovePhoto,
+    this.viewOnly = false,
   });
 
   @override
@@ -63,6 +66,42 @@ class PhotoSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Save status indicator
+            Obx(() {
+              final isSaving = Get.find<InspectionReportsController>().isSaving.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: isSaving
+                          ? Row(
+                              key: const ValueKey('saving'),
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 6),
+                                Text('Saving...', style: TextStyle(color: colorScheme.primary, fontSize: 12)),
+                              ],
+                            )
+                          : Row(
+                              key: const ValueKey('saved'),
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                const SizedBox(width: 4),
+                                Text('Saved', style: TextStyle(color: Colors.green, fontSize: 12)),
+                              ],
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            }),
             // Header Row
             Row(
               children: [
@@ -142,7 +181,7 @@ class PhotoSection extends StatelessWidget {
             const SizedBox(height: 20),
             
             // Photo List or Upload Area
-            if (photos.isEmpty)
+            if (photos.isEmpty && !viewOnly)
               _buildUploadArea(context, colorScheme, theme)
             else
               _buildPhotoList(context, colorScheme, theme),
@@ -219,7 +258,7 @@ class PhotoSection extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onAddPhoto,
+          onTap: viewOnly ? null : onAddPhoto,
           borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
@@ -320,32 +359,33 @@ class PhotoSection extends StatelessWidget {
             ),
           ),
           // Remove Button
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              onTap: () => onRemovePhoto?.call(index),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.close_rounded,
-                  color: Colors.white,
-                  size: 16,
+          if (!viewOnly)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: () => onRemovePhoto?.call(index),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
               ),
             ),
-          ),
           // Photo Index
           Positioned(
             bottom: 8,

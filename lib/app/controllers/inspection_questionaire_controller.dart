@@ -4,6 +4,7 @@ import 'package:safe_harbor_field_app/app/controllers/inspection_photos_controll
 import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
 import 'package:safe_harbor_field_app/app/services/inspection_report_submission_service.dart';
 import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
 
 class QuestionnaireController extends GetxController {
   final QuestionnaireService _questionnaireService = Get.put(QuestionnaireService());
@@ -23,11 +24,19 @@ class QuestionnaireController extends GetxController {
   final RxString submissionError = ''.obs;
   final RxString lastSubmittedReportId = ''.obs;
 
+  final RxBool viewOnly = false.obs;
+
+  void setViewOnly(bool value) {
+    viewOnly.value = value;
+  }
+
   // Get questions and sections from service
   List<Question> get questions => _questionnaireService.questions;
   List<QuestionSection> get sections => _questionnaireService.sections;
   bool get isLoading => _questionnaireService.isLoading;
   String get error => _questionnaireService.error;
+
+  bool isLoadingFromModel = false;
 
   @override
   void onInit() {
@@ -35,6 +44,17 @@ class QuestionnaireController extends GetxController {
     _setupValidation();
     _initializeSectionStates();
     _bindSubmissionState();
+    // Auto-save on formData change
+    ever(formData, (_) {
+      if (!isLoadingFromModel) {
+        print('[Auto-Save] formData changed, saving report progress...');
+        try {
+          Get.find<InspectionReportsController>().saveCurrentReportProgress();
+        } catch (e) {
+          print('[Auto-Save] Error saving report progress from formData change: ' + e.toString());
+        }
+      }
+    });
   }
 
   void _setupValidation() {
@@ -413,13 +433,21 @@ class QuestionnaireController extends GetxController {
 
   // Method to get form data for saving
   Map<String, dynamic> getFormData() {
-    return Map<String, dynamic>.from(formData);
+    final data = Map<String, dynamic>.from(formData);
+    print('[DEBUG] getFormData returning: ' + data.toString());
+    if (data.isEmpty) print('[WARNING] getFormData: formData is empty!');
+    return data;
   }
 
   // Method to load form data (from saved draft)
   void loadFormData(Map<String, dynamic> data) {
+    isLoadingFromModel = true;
+    print('[DEBUG] loadFormData called with: ' + data.toString());
+    if (data.isEmpty) print('[WARNING] loadFormData: input data is empty!');
     formData.assignAll(data);
     validateForm();
+    print('[DEBUG] formData after assignAll: ' + formData.toString());
+    isLoadingFromModel = false;
   }
 
   // Method to save draft

@@ -12,6 +12,7 @@ class TextInputWidget extends StatelessWidget {
   final void Function(String)? onChanged;
   final TextEditingController? controller;
   final bool hasError;
+  final bool enabled;
 
   const TextInputWidget({
     Key? key,
@@ -25,6 +26,7 @@ class TextInputWidget extends StatelessWidget {
     this.onChanged,
     this.controller,
     this.hasError = false,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -95,7 +97,9 @@ class TextInputWidget extends StatelessWidget {
                 focusedBorder: InputBorder.none,
                 ),
               validator: validator,
-              onChanged: onChanged,
+              onChanged: enabled ? onChanged : null,
+              enabled: enabled,
+              readOnly: !enabled,
             ),
           ),
         ],

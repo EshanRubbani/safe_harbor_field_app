@@ -550,8 +550,9 @@ class QuestionnaireService extends GetxService {
     String? currentValue,
     Function(String?)? onChanged,
     String? Function(String?)? validator,
-    String labelPrefix = '', // <-- add this
+    String labelPrefix = '',
     bool hasError = false,
+    bool viewOnly = false,
   }) {
     final label = labelPrefix + question.text;
     switch (question.type) {
@@ -562,11 +563,11 @@ class QuestionnaireService extends GetxService {
           hintText:
               question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
           isRequired: question.isRequired,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       case QuestionType.longText:
         return TextInputWidget(
           label: label,
@@ -575,11 +576,11 @@ class QuestionnaireService extends GetxService {
               question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
           isRequired: question.isRequired,
           maxLines: 3,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       case QuestionType.number:
         return TextInputWidget(
           label: label,
@@ -588,11 +589,11 @@ class QuestionnaireService extends GetxService {
               question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
           isRequired: question.isRequired,
           keyboardType: TextInputType.number,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       case QuestionType.dropdown:
         return DropdownWidget(
           label: label,
@@ -601,47 +602,46 @@ class QuestionnaireService extends GetxService {
           hintText:
               question.placeholder ?? 'Select ${question.text.toLowerCase()}',
           isRequired: question.isRequired,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       case QuestionType.date:
         return DateInputWidget(
           label: label,
           initialDate:
               currentValue != null ? DateTime.tryParse(currentValue) : null,
           isRequired: question.isRequired,
-          onChanged: (date) => onChanged?.call(date?.toIso8601String()),
+          onChanged: viewOnly ? null : (date) => onChanged?.call(date?.toIso8601String()),
           validator: (date) => validator?.call(date?.toIso8601String()),
           firstDate: DateTime(2020),
           lastDate: DateTime.now().add(const Duration(days: 365)),
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       case QuestionType.multipleChoice:
-        // Use RadioButtonWidget for multiple choice (since it's already imported and styled)
         return RadioButtonWidget(
           label: label,
           options: question.options ?? [],
           selectedValue: currentValue,
           isRequired: question.isRequired,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       case QuestionType.yesNo:
         return RadioButtonWidget(
           label: label,
           options: const ['Yes', 'No'],
           selectedValue: currentValue,
           isRequired: question.isRequired,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
-
       default:
         return TextInputWidget(
           label: label,
@@ -649,9 +649,10 @@ class QuestionnaireService extends GetxService {
           hintText:
               question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
           isRequired: question.isRequired,
-          onChanged: onChanged,
+          onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
+          enabled: !viewOnly,
         );
     }
   }

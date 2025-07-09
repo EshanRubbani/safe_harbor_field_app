@@ -9,6 +9,7 @@ class RadioButtonWidget extends StatelessWidget {
   final Function(String?)? onChanged;
   final String? Function(String?)? validator;
   final bool hasError;
+  final bool enabled;
 
   const RadioButtonWidget({
     Key? key,
@@ -20,6 +21,7 @@ class RadioButtonWidget extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.hasError = false,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -113,7 +115,7 @@ class RadioButtonWidget extends StatelessWidget {
     return SizedBox( // ✅ Fixed height for vertical layout
       height: 48, // Adjust as needed
       child: InkWell(
-        onTap: () => onChanged?.call(option),
+        onTap: enabled ? () => onChanged?.call(option) : null,
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -133,7 +135,7 @@ class RadioButtonWidget extends StatelessWidget {
               Radio<String>(
                 value: option,
                 groupValue: selectedValue,
-                onChanged: onChanged,
+                onChanged: enabled ? onChanged : null,
                 activeColor: colorScheme.primary,
               ),
               Text(

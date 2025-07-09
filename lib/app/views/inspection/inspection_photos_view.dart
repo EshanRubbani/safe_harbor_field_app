@@ -11,7 +11,7 @@ class InspectionPhotosView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final InspectionPhotosController controller = Get.put(InspectionPhotosController());
+    final InspectionPhotosController controller = Get.find<InspectionPhotosController>();
     
     return Scaffold(
       body: Container(
@@ -49,6 +49,7 @@ class InspectionPhotosView extends StatelessWidget {
                       errorMessage: controller.primaryRiskErrorMessage.value,
                       onAddPhoto: () => controller.showPhotoSourceDialog('primary_risk'),
                       onRemovePhoto: (index) => controller.removePhoto('primary_risk', index),
+                      viewOnly: controller.viewOnly.value,
                     )),
           
                     // Front Elevation Photo Section
@@ -61,6 +62,7 @@ class InspectionPhotosView extends StatelessWidget {
                       photoCountText: controller.getPhotoCountText('front_elevation'),
                       onAddPhoto: () => controller.showPhotoSourceDialog('front_elevation'),
                       onRemovePhoto: (index) => controller.removePhoto('front_elevation', index),
+                      viewOnly: controller.viewOnly.value,
                     )),
           
                     // Right Elevation Photo Section
@@ -73,6 +75,7 @@ class InspectionPhotosView extends StatelessWidget {
                       photoCountText: controller.getPhotoCountText('right_elevation'),
                       onAddPhoto: () => controller.showPhotoSourceDialog('right_elevation'),
                       onRemovePhoto: (index) => controller.removePhoto('right_elevation', index),
+                      viewOnly: controller.viewOnly.value,
                     )),
           
                     // Rear Elevation Photo Section
@@ -85,6 +88,7 @@ class InspectionPhotosView extends StatelessWidget {
                       photoCountText: controller.getPhotoCountText('rear_elevation'),
                       onAddPhoto: () => controller.showPhotoSourceDialog('rear_elevation'),
                       onRemovePhoto: (index) => controller.removePhoto('rear_elevation', index),
+                      viewOnly: controller.viewOnly.value,
                     )),
           
                     // Roof Photo Section
@@ -97,6 +101,7 @@ class InspectionPhotosView extends StatelessWidget {
                       photoCountText: controller.getPhotoCountText('roof'),
                       onAddPhoto: () => controller.showPhotoSourceDialog('roof'),
                       onRemovePhoto: (index) => controller.removePhoto('roof', index),
+                      viewOnly: controller.viewOnly.value,
                     )),
           
                     // Additional Photos Section
@@ -109,6 +114,7 @@ class InspectionPhotosView extends StatelessWidget {
                       photoCountText: controller.getPhotoCountText('additional'),
                       onAddPhoto: () => controller.showPhotoSourceDialog('additional'),
                       onRemovePhoto: (index) => controller.removePhoto('additional', index),
+                      viewOnly: controller.viewOnly.value,
                     )),
           
                     const SizedBox(height: 100), // Space for floating button
@@ -121,27 +127,29 @@ class InspectionPhotosView extends StatelessWidget {
       ),
       
       // Floating Action Button
-      floatingActionButton: Obx(() => controller.totalPhotoCount > 0 
-        ? FloatingActionButton.extended(
-            onPressed: () {
-              if (controller.validateForm()) {
-                Get.snackbar(
-                  'Success', 
-                  'All photos collected successfully! Total: ${controller.totalPhotoCount}',
-                  snackPosition: SnackPosition.TOP,
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
-                Get.toNamed(AppRoutes.inspection_questionaire);
-              }
-            },
-            icon: Icon(Icons.arrow_forward_ios_rounded),
-            label: Text('Next: Questionnaire'),
-            
-            backgroundColor: colorScheme.primary,
-            foregroundColor: Colors.white,
-          )
-        : const SizedBox.shrink(),
+      floatingActionButton: Obx(() =>
+        controller.viewOnly.value
+            ? const SizedBox.shrink()
+            : (controller.totalPhotoCount > 0 
+                ? FloatingActionButton.extended(
+                    onPressed: () {
+                      if (controller.validateForm()) {
+                        Get.snackbar(
+                          'Success', 
+                          'All photos collected successfully! Total: ${controller.totalPhotoCount}',
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
+                        Get.toNamed(AppRoutes.inspection_questionaire);
+                      }
+                    },
+                    icon: Icon(Icons.arrow_forward_ios_rounded),
+                    label: Text('Next: Questionnaire'),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  )
+                : const SizedBox.shrink()),
       ),
     );
   }

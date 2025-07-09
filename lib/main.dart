@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_photos_controller.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/controllers/auth_controller.dart';
 import 'app/themes/app_theme.dart';
@@ -9,6 +11,8 @@ import 'app/controllers/theme_controller.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'firebase_options.dart';
+import 'app/controllers/inspection_reports_controller.dart';
+import 'app/services/questionaire_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,8 +26,13 @@ void main() async {
   await Get.putAsync(() => SharedPreferences.getInstance());
   
   
-  Get.put(ThemeController());
-  Get.put(AuthController());
+  Get.put(ThemeController(), permanent: true);
+  Get.put(AuthController(), permanent: true);
+  Get.put(InspectionPhotosController(), permanent: true);
+  Get.put(QuestionnaireController(), permanent: true);
+  Get.put(InspectionReportsController(), permanent: true);
+  Get.put(QuestionnaireService(), permanent: true);
+
   runApp(const MyApp());
 }
 

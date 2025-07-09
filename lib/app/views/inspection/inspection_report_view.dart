@@ -1,54 +1,152 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
+import 'package:safe_harbor_field_app/app/models/inspection_report_model.dart';
+import 'package:safe_harbor_field_app/app/controllers/auth_controller.dart';
+import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
 
 class InspectionReportView extends StatelessWidget {
   const InspectionReportView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // final InspectionPhotosController controller = Get.put(InspectionPhotosController());
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final InspectionReportsController reportsController = Get.find<InspectionReportsController>();
+    final userId = Get.find<AuthController>().user?.uid ?? '';
+
+    // Fetch cloud reports on first build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      reportsController.fetchCloudReports();
+    });
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.background,
-              colorScheme.background.withOpacity(0.95),
-            ],
+      appBar: AppBar(
+        title: const Text('Inspection Reports'),
+        actions: [
+          // Save status indicator in app bar
+          Obx(() {
+            final isSaving = reportsController.isSaving.value;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: isSaving
+                    ? Row(
+                        key: const ValueKey('saving'),
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 6),
+                          Text('Saving...', style: TextStyle(color: colorScheme.primary, fontSize: 12)),
+                        ],
+                      )
+                    : Row(
+                        key: const ValueKey('saved'),
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green, size: 16),
+                          const SizedBox(width: 4),
+                          Text('Saved', style: TextStyle(color: Colors.green, fontSize: 12)),
+                        ],
+                      ),
+              ),
+            );
+          }),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () {
+              reportsController.loadLocalReports();
+              reportsController.fetchCloudReports();
+            },
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Card
-              _buildHeaderCard(colorScheme, theme),
-              
-              // Complete and Save Section
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8.0),
-                      _buildCompleteAndSaveSection(colorScheme, theme),
-                      const Spacer(),
-                      _buildCompleteButton(colorScheme, theme),
-                      const SizedBox(height: 24.0),
-                    ],
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Start New Report',
+            onPressed: () {
+              reportsController.startNewReport(userId);
+              Get.toNamed(AppRoutes.inspection_photos);
+            },
+          ),
+        ],
+      ),
+      body: Obx(() {
+        // Combine local and cloud reports, deduplicate by id (cloud takes precedence)
+        final local = reportsController.localReports;
+        final cloud = reportsController.cloudReports;
+        final Map<String, InspectionReportModel> allReportsMap = {
+          for (var r in local) r.id: r,
+          for (var r in cloud) r.id: r,
+        };
+        final allReports = allReportsMap.values.toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        if (allReports.isEmpty) {
+          return const Center(child: Text('No reports found.'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: allReports.length,
+          itemBuilder: (context, idx) {
+            final report = allReports[idx];
+            final isCompleted = report.status == InspectionReportStatus.uploaded;
+            return Card(
+              child: ListTile(
+                title: Text('Report ${report.id}'),
+                subtitle: Text(isCompleted
+                    ? 'Completed: ${report.updatedAt}'
+                    : 'Started: ${report.createdAt}'),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isCompleted ? Colors.green : Colors.orange,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isCompleted ? 'Completed' : 'In Progress',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
+                onTap: () {
+                  if (!isCompleted) {
+                    reportsController.resumeReport(report.id);
+                    Get.toNamed(AppRoutes.inspection_photos);
+                  }
+                },
+                onLongPress: () async {
+                  if (!isCompleted) {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete Report'),
+                        content: const Text('Are you sure you want to delete this in-progress report? This cannot be undone.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      reportsController.deleteInProgressReport(report.id);
+                    }
+                  }
+                },
               ),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      }),
     );
   }
 

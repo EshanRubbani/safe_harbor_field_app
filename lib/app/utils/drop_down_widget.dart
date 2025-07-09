@@ -10,6 +10,7 @@ class DropdownWidget extends StatelessWidget {
   final void Function(String?)? onChanged;
   final String? Function(String?)? validator;
   final bool hasError;
+  final bool enabled;
 
   const DropdownWidget({
     Key? key,
@@ -21,6 +22,7 @@ class DropdownWidget extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.hasError = false,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -82,7 +84,13 @@ class DropdownWidget extends StatelessWidget {
                   ),
                 );
               }).toList(),
-              onChanged: onChanged,
+              onChanged: enabled ? onChanged : null,
+              disabledHint: Text(
+                value ?? hintText ?? 'Select $label',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
               validator: validator,
               decoration: InputDecoration(
                 hintText: hintText ?? 'Select $label',

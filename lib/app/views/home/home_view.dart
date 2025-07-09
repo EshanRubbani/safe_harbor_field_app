@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:safe_harbor_field_app/app/controllers/auth_controller.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
 import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
 import 'package:safe_harbor_field_app/app/utils/featured_card.dart';
 
@@ -66,6 +67,12 @@ class HomeView extends StatelessWidget {
                   _buildCTASection(context, theme, colorScheme),
 
                   const SizedBox(height: 30),
+
+                  // Reports Section
+                  _buildReportsSection(context, theme, colorScheme),
+
+                  const SizedBox(height: 30),
+
                 ],
               ),
             ),
@@ -265,6 +272,10 @@ class HomeView extends StatelessWidget {
               ),
             ),
             onPressed: () {
+              final reportsController = Get.put(InspectionReportsController());
+              final userId = Get.find<AuthController>().user?.uid ?? '';
+              // reportsController.exitViewOnlyMode();
+              reportsController.startNewReport(userId);
               Get.toNamed(AppRoutes.inspection_photos);
             },
             child: Row(
@@ -295,5 +306,97 @@ class HomeView extends StatelessWidget {
         ),
       ],
     );
-  }
+
+      }
+
+
+
+  Widget _buildReportsSection(
+      BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+    return Column(
+      children: [
+        // Secondary text
+        Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Text(
+            'View Inspection Reports',
+            style: theme.textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onBackground.withOpacity(0.8),
+                  fontWeight: FontWeight.w600,
+                ) ??
+                TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onBackground.withOpacity(0.8),
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+
+        // CTA Button
+        Container(
+          width: double.infinity,
+          height: 56,
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                colorScheme.primary,
+                colorScheme.secondary,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onPressed: () {
+              Get.toNamed(AppRoutes.inspection_report);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'View Inspection Reports',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ) ??
+                      const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                ),
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+
+      }
+
+      
 }

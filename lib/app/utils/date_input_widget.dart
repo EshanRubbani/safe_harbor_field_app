@@ -10,6 +10,7 @@ class DateInputWidget extends StatefulWidget {
   final DateTime? firstDate;
   final DateTime? lastDate;
   final bool hasError;
+  final bool enabled;
 
   const DateInputWidget({
     Key? key,
@@ -21,6 +22,7 @@ class DateInputWidget extends StatefulWidget {
     this.firstDate,
     this.lastDate,
     this.hasError = false,
+    this.enabled = true,
   }) : super(key: key);
 
   @override
@@ -100,7 +102,7 @@ class _DateInputWidgetState extends State<DateInputWidget> {
 
           // Date Input Field
           GestureDetector(
-            onTap: () => _selectDate(context),
+            onTap: widget.enabled ? () => _selectDate(context) : null,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(

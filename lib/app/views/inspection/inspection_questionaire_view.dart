@@ -4,6 +4,7 @@ import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_co
 import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
 import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
 import 'package:safe_harbor_field_app/app/utils/form_section_widget.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
 
 class InspectionQuestionnaireView extends StatelessWidget {
   const InspectionQuestionnaireView({super.key});
@@ -13,9 +14,8 @@ class InspectionQuestionnaireView extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     // Register the service before the controller
-    final QuestionnaireService service = Get.put(QuestionnaireService());
-    final QuestionnaireController controller =
-        Get.put(QuestionnaireController());
+    final QuestionnaireService service = Get.find<QuestionnaireService>();
+    final QuestionnaireController controller = Get.find<QuestionnaireController>();
 
     return Scaffold(
       body: Container(
@@ -32,6 +32,42 @@ class InspectionQuestionnaireView extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
+              // Save status indicator
+              Obx(() {
+                final isSaving = Get.find<InspectionReportsController>().isSaving.value;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: isSaving
+                            ? Row(
+                                key: const ValueKey('saving'),
+                                children: [
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text('Saving...', style: TextStyle(color: colorScheme.primary)),
+                                ],
+                              )
+                            : Row(
+                                key: const ValueKey('saved'),
+                                children: [
+                                  Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                  const SizedBox(width: 6),
+                                  Text('Saved', style: TextStyle(color: Colors.green)),
+                                ],
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
               // Header Card
 
               // Loading State
@@ -124,6 +160,7 @@ class InspectionQuestionnaireView extends StatelessWidget {
                                                 controller.validateQuestion(
                                                     question, value),
                                             hasError: hasError, // Pass error state to widget
+                                            viewOnly: controller.viewOnly.value,
                                           );
                                         }),
                                       )
@@ -145,25 +182,25 @@ class InspectionQuestionnaireView extends StatelessWidget {
       ),
 
       // Floating Action Button
-      floatingActionButton: Obx(() => AnimatedScale(
-            scale: controller.isFormValid.value ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: controller.isFormValid.value
-                ? FloatingActionButton.extended(
-                    onPressed: () {
-                      // if (controller.submitForm()) {
-                      //   // Navigate to next screen or perform action
-                      //   Get.toNamed(AppRoutes.inspection_report);
-                      // }
-                      Get.toNamed(AppRoutes.inspection_report);
-                    },
-                    icon: const Icon(Icons.check_circle_outline_rounded),
-                    label: const Text('Submit Questionnaire'),
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: Colors.white,
-                  )
-                : const SizedBox.shrink(),
-          )),
+      floatingActionButton: Obx(() =>
+            controller.viewOnly.value
+                ? const SizedBox.shrink()
+                : AnimatedScale(
+                    scale: controller.isFormValid.value ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: controller.isFormValid.value
+                        ? FloatingActionButton.extended(
+                            onPressed: () {
+                              Get.toNamed(AppRoutes.inspection_report);
+                            },
+                            icon: const Icon(Icons.check_circle_outline_rounded),
+                            label: const Text('Submit Questionnaire'),
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: Colors.white,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+          ),
 
   //     // App Bar with actions
   //     appBar: AppBar(
