@@ -60,7 +60,7 @@ class DropdownWidget extends StatelessWidget {
           // Dropdown Field
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(4.0),
               border: Border.all(
                 color: hasError
                     ? colorScheme.error
