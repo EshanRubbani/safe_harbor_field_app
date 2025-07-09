@@ -89,6 +89,12 @@ class InspectionReportsController extends GetxController {
     final report = currentReport.value!;
     final formData = questionnaireController.getFormData();
     final imagesMap = photosController.getAllPhotosAsMap();
+    // Skip saving if both formData and all photo lists are empty
+    if (formData.isEmpty && imagesMap.values.every((l) => l.isEmpty)) {
+      print('[WARNING] Skipping auto-save: No data to save');
+      isSaving.value = false;
+      return;
+    }
     print('[DEBUG] Saving formData: ' + formData.toString());
     print('[DEBUG] Saving images: ' + imagesMap.toString());
     if (formData.isEmpty) print('[WARNING] formData is empty when saving!');
@@ -118,6 +124,9 @@ class InspectionReportsController extends GetxController {
     try {
       final report = localReports.firstWhereOrNull((r) => r.id == reportId);
       if (report != null) {
+        // Pause auto-save in both controllers
+        questionnaireController.pauseAutoSave();
+        photosController.pauseAutoSave();
         // Clear controllers before loading new data
         questionnaireController.formData.clear();
         photosController.clearData();
@@ -132,6 +141,11 @@ class InspectionReportsController extends GetxController {
         await photosController.loadPhotosFromMap(report.images);
         print('[DEBUG] Controller images after load: ' + photosController.getAllPhotosAsMap().toString());
         print('[Lifecycle] Successfully resumed report: $reportId. Data loaded into controllers.');
+        // Resume auto-save after a short delay to avoid race condition
+        Future.delayed(const Duration(seconds: 1), () {
+          questionnaireController.resumeAutoSave();
+          photosController.resumeAutoSave();
+        });
       } else {
         print('[Lifecycle] No report found with ID: $reportId');
         Get.snackbar(

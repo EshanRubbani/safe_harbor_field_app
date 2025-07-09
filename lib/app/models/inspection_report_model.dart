@@ -49,15 +49,18 @@ class InspectionReportModel {
   }
 
   Map<String, dynamic> toJson() {
+    // Validation: Ensure formData and images are not both empty
+    assert(questionnaireResponses.isNotEmpty || (images.values.any((l) => l.isNotEmpty)),
+      'InspectionReportModel: Both formData and images are empty!');
     print('[Model] Serializing InspectionReportModel to JSON...');
     try {
       return {
         'id': id,
         'userId': userId,
-        'status': status.toString().split('.').last,
+        'status': status.toString(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
-        'questionnaireResponses': questionnaireResponses,
+        'questionnaire_responses': questionnaireResponses,
         'images': images,
         'syncedToCloud': syncedToCloud,
         'summary': summary,

@@ -5,6 +5,7 @@ import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
 import 'package:safe_harbor_field_app/app/services/inspection_report_submission_service.dart';
 import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
+import 'dart:async';
 
 class QuestionnaireController extends GetxController {
   final QuestionnaireService _questionnaireService = Get.put(QuestionnaireService());
@@ -38,6 +39,17 @@ class QuestionnaireController extends GetxController {
 
   bool isLoadingFromModel = false;
 
+  Timer? _autoSaveDebounce;
+  bool _autoSavePaused = false;
+
+  void pauseAutoSave() {
+    _autoSavePaused = true;
+  }
+
+  void resumeAutoSave() {
+    _autoSavePaused = false;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -46,13 +58,16 @@ class QuestionnaireController extends GetxController {
     _bindSubmissionState();
     // Auto-save on formData change
     ever(formData, (_) {
-      if (!isLoadingFromModel) {
-        print('[Auto-Save] formData changed, saving report progress...');
-        try {
-          Get.find<InspectionReportsController>().saveCurrentReportProgress();
-        } catch (e) {
-          print('[Auto-Save] Error saving report progress from formData change: ' + e.toString());
-        }
+      if (!isLoadingFromModel && !_autoSavePaused) {
+        _autoSaveDebounce?.cancel();
+        _autoSaveDebounce = Timer(const Duration(seconds: 2), () {
+          print('[Auto-Save] formData changed, saving report progress...');
+          try {
+            Get.find<InspectionReportsController>().saveCurrentReportProgress();
+          } catch (e) {
+            print('[Auto-Save] Error saving report progress from formData change: ' + e.toString());
+          }
+        });
       }
     });
   }
@@ -441,9 +456,12 @@ class QuestionnaireController extends GetxController {
 
   // Method to load form data (from saved draft)
   void loadFormData(Map<String, dynamic> data) {
+    if (data.isEmpty) {
+      print('[ERROR] Refusing to load empty formData');
+      return;
+    }
     isLoadingFromModel = true;
     print('[DEBUG] loadFormData called with: ' + data.toString());
-    if (data.isEmpty) print('[WARNING] loadFormData: input data is empty!');
     formData.assignAll(data);
     validateForm();
     print('[DEBUG] formData after assignAll: ' + formData.toString());

@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'inspection_reports_controller.dart';
+import 'dart:async';
 
 class InspectionPhotosController extends GetxController {
   final ImagePicker _picker = ImagePicker();
@@ -32,6 +33,17 @@ class InspectionPhotosController extends GetxController {
   Directory? _persistentDir;
 
   bool isLoadingFromModel = false;
+
+  Timer? _autoSaveDebounce;
+  bool _autoSavePaused = false;
+
+  void pauseAutoSave() {
+    _autoSavePaused = true;
+  }
+
+  void resumeAutoSave() {
+    _autoSavePaused = false;
+  }
 
   void setViewOnly(bool value) {
     viewOnly.value = value;
@@ -60,12 +72,19 @@ class InspectionPhotosController extends GetxController {
 
   void _setupAutoSave() {
     // Auto-save on photo list changes
-    ever(primaryRiskPhotos, (_) { if (!isLoadingFromModel) _saveReportProgress('primaryRiskPhotos'); });
-    ever(frontElevationPhotos, (_) { if (!isLoadingFromModel) _saveReportProgress('frontElevationPhotos'); });
-    ever(rightElevationPhotos, (_) { if (!isLoadingFromModel) _saveReportProgress('rightElevationPhotos'); });
-    ever(rearElevationPhotos, (_) { if (!isLoadingFromModel) _saveReportProgress('rearElevationPhotos'); });
-    ever(roofPhotos, (_) { if (!isLoadingFromModel) _saveReportProgress('roofPhotos'); });
-    ever(additionalPhotos, (_) { if (!isLoadingFromModel) _saveReportProgress('additionalPhotos'); });
+    ever(primaryRiskPhotos, (_) { if (!isLoadingFromModel && !_autoSavePaused) _debouncedSave('primaryRiskPhotos'); });
+    ever(frontElevationPhotos, (_) { if (!isLoadingFromModel && !_autoSavePaused) _debouncedSave('frontElevationPhotos'); });
+    ever(rightElevationPhotos, (_) { if (!isLoadingFromModel && !_autoSavePaused) _debouncedSave('rightElevationPhotos'); });
+    ever(rearElevationPhotos, (_) { if (!isLoadingFromModel && !_autoSavePaused) _debouncedSave('rearElevationPhotos'); });
+    ever(roofPhotos, (_) { if (!isLoadingFromModel && !_autoSavePaused) _debouncedSave('roofPhotos'); });
+    ever(additionalPhotos, (_) { if (!isLoadingFromModel && !_autoSavePaused) _debouncedSave('additionalPhotos'); });
+  }
+
+  void _debouncedSave(String category) {
+    _autoSaveDebounce?.cancel();
+    _autoSaveDebounce = Timer(const Duration(seconds: 2), () {
+      _saveReportProgress(category);
+    });
   }
 
   void _saveReportProgress(String category) {
@@ -374,22 +393,22 @@ class InspectionPhotosController extends GetxController {
     }
   }
 
-  // Export all photos as a map of category to file paths
+  // Export all photos as a map of category to filenames only
   Map<String, List<String>> getAllPhotosAsMap() {
     final map = {
-      'primary_risk': primaryRiskPhotos.map((f) => f.path).toList(),
-      'front_elevation': frontElevationPhotos.map((f) => f.path).toList(),
-      'right_elevation': rightElevationPhotos.map((f) => f.path).toList(),
-      'rear_elevation': rearElevationPhotos.map((f) => f.path).toList(),
-      'roof': roofPhotos.map((f) => f.path).toList(),
-      'additional': additionalPhotos.map((f) => f.path).toList(),
+      'primary_risk': primaryRiskPhotos.map((f) => path.basename(f.path)).toList(),
+      'front_elevation': frontElevationPhotos.map((f) => path.basename(f.path)).toList(),
+      'right_elevation': rightElevationPhotos.map((f) => path.basename(f.path)).toList(),
+      'rear_elevation': rearElevationPhotos.map((f) => path.basename(f.path)).toList(),
+      'roof': roofPhotos.map((f) => path.basename(f.path)).toList(),
+      'additional': additionalPhotos.map((f) => path.basename(f.path)).toList(),
     };
     print('[DEBUG] getAllPhotosAsMap returning: ' + map.toString());
     if (map.values.every((l) => l.isEmpty)) print('[WARNING] getAllPhotosAsMap: all photo lists are empty!');
     return map;
   }
 
-  // Load photos from a map of category to file paths
+  // Load photos from a map of category to filenames (not full paths)
   Future<void> loadPhotosFromMap(Map<String, List<String>> map) async {
     isLoadingFromModel = true;
     print('[Photos] Loading photos from map: $map');
@@ -401,13 +420,19 @@ class InspectionPhotosController extends GetxController {
     rearElevationPhotos.clear();
     roofPhotos.clear();
     additionalPhotos.clear();
+    // Ensure persistent dir is ready
+    if (_persistentDir == null) {
+      await _initializePersistentDirectory();
+    }
+    // Helper to get full path
+    String fullPath(String filename) => path.join(_persistentDir!.path, filename);
     // Load photos for each category
-    await _loadCategoryPhotos('primary_risk', map['primary_risk'] ?? [], primaryRiskPhotos);
-    await _loadCategoryPhotos('front_elevation', map['front_elevation'] ?? [], frontElevationPhotos);
-    await _loadCategoryPhotos('right_elevation', map['right_elevation'] ?? [], rightElevationPhotos);
-    await _loadCategoryPhotos('rear_elevation', map['rear_elevation'] ?? [], rearElevationPhotos);
-    await _loadCategoryPhotos('roof', map['roof'] ?? [], roofPhotos);
-    await _loadCategoryPhotos('additional', map['additional'] ?? [], additionalPhotos);
+    await _loadCategoryPhotos('primary_risk', (map['primary_risk'] ?? []).map(fullPath).toList(), primaryRiskPhotos);
+    await _loadCategoryPhotos('front_elevation', (map['front_elevation'] ?? []).map(fullPath).toList(), frontElevationPhotos);
+    await _loadCategoryPhotos('right_elevation', (map['right_elevation'] ?? []).map(fullPath).toList(), rightElevationPhotos);
+    await _loadCategoryPhotos('rear_elevation', (map['rear_elevation'] ?? []).map(fullPath).toList(), rearElevationPhotos);
+    await _loadCategoryPhotos('roof', (map['roof'] ?? []).map(fullPath).toList(), roofPhotos);
+    await _loadCategoryPhotos('additional', (map['additional'] ?? []).map(fullPath).toList(), additionalPhotos);
     _checkValidation();
     isLoadingFromModel = false;
     print('[Photos] Photos loaded successfully. Total: $totalPhotoCount');
