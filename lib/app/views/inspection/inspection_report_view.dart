@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
-import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
-import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
-import 'package:safe_harbor_field_app/app/utils/form_section_widget.dart';
 
 class InspectionReportView extends StatelessWidget {
   const InspectionReportView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // final InspectionPhotosController controller = Get.put(InspectionPhotosController());
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -284,23 +283,31 @@ class InspectionReportView extends StatelessWidget {
     );
   }
 
-  void _handleCompleteAndSave() {
-    // Add your logic here to save the inspection
-    // For example:
-    // final controller = Get.find<InspectionQuestionaireController>();
-    // controller.completeAndSaveInspection();
-    
-    // Show success message
-    Get.snackbar(
-      "Success",
-      "Inspection saved successfully!",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF28A745),
-      colorText: Colors.white,
-      icon: const Icon(Icons.check_circle, color: Colors.white),
-    );
-    
-    // Navigate back or to completed inspections page
-    // Get.offNamed(AppRoutes.completedInspections);
+  void _handleCompleteAndSave() async {
+    final controller = Get.find<QuestionnaireController>();
+    final success = await controller.submitInspectionReport();
+    if (success) {
+      Get.snackbar(
+        "Success",
+        "Inspection report uploaded successfully!",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF28A745),
+        colorText: Colors.white,
+        icon: const Icon(Icons.check_circle, color: Colors.white),
+      );
+      // Optionally navigate to completed inspections page
+      // Get.offNamed(AppRoutes.completedInspections);
+    } else {
+      Get.snackbar(
+        "Error",
+        controller.submissionError.value.isNotEmpty
+            ? controller.submissionError.value
+            : "Failed to upload inspection report.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        icon: const Icon(Icons.error, color: Colors.white),
+      );
+    }
   }
 }
