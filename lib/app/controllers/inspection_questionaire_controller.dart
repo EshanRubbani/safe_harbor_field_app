@@ -1,8 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:safe_harbor_field_app/app/controllers/inspection_photos_controller.dart';
+import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
+import 'package:safe_harbor_field_app/app/services/inspection_report_submission_service.dart';
 import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
 
 class QuestionnaireController extends GetxController {
-  final QuestionnaireService _questionnaireService = Get.find<QuestionnaireService>();
+  final QuestionnaireService _questionnaireService = Get.put(QuestionnaireService());
+  final InspectionReportService _inspectionReportService = Get.put(InspectionReportService());
+ 
   
   // Dynamic form data storage
   final RxMap<String, dynamic> formData = <String, dynamic>{}.obs;
@@ -11,6 +17,11 @@ class QuestionnaireController extends GetxController {
 
   // Section expansion states
   final RxMap<String, bool> sectionExpanded = <String, bool>{}.obs;
+
+  // Submission state
+  final RxBool isSubmitting = false.obs;
+  final RxString submissionError = ''.obs;
+  final RxString lastSubmittedReportId = ''.obs;
 
   // Get questions and sections from service
   List<Question> get questions => _questionnaireService.questions;
@@ -23,6 +34,7 @@ class QuestionnaireController extends GetxController {
     super.onInit();
     _setupValidation();
     _initializeSectionStates();
+    _bindSubmissionState();
   }
 
   void _setupValidation() {
@@ -38,6 +50,17 @@ class QuestionnaireController extends GetxController {
     for (final section in sections) {
       sectionExpanded[section.id] = true;
     }
+  }
+
+  void _bindSubmissionState() {
+    // Bind submission state from service
+    ever(_inspectionReportService.isSubmittingObs, (isSubmitting) {
+      this.isSubmitting.value = isSubmitting;
+    });
+    
+    ever(_inspectionReportService.errorObs, (error) {
+      submissionError.value = error;
+    });
   }
 
   // Update form data for a specific question
@@ -176,7 +199,8 @@ class QuestionnaireController extends GetxController {
     isFormValid.value = isValid;
   }
 
-  bool submitForm() {
+  // Submit the complete inspection report
+  Future<bool> submitInspectionReport() async {
     validateForm();
     
     if (!isFormValid.value) {
@@ -190,23 +214,201 @@ class QuestionnaireController extends GetxController {
       return false;
     }
 
-    // Here you would typically send the data to your API
+    try {
+      // Convert form data to proper format for submission
+      final submissionData = _prepareSubmissionData();
+      
+      // Submit the report
+      final reportId = await _inspectionReportService.submitInspectionReport(
+        questionnaireData: submissionData,
+        imageUrlsByCategory: _getDummyImageUrls(), // Will be replaced with actual image URLs later
+      );
+
+      if (reportId != null) {
+        lastSubmittedReportId.value = reportId;
+        
+        // Show success dialog with report ID
+        Get.dialog(
+          AlertDialog(
+            title: const Text('Report Submitted'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Your inspection report has been submitted successfully!'),
+                const SizedBox(height: 8),
+                Text(
+                  'Report ID: $reportId',
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  // _showReportOptions();
+                  //clear all data in controllers.
+                  resetForm();
+                  Get.toNamed(AppRoutes.HOME);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      Get.snackbar(
+        'Submission Error',
+        'Failed to submit report: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Get.theme.colorScheme.error,
+        colorText: Get.theme.colorScheme.onError,
+      );
+      return false;
+    }
+  }
+
+  // Prepare form data for submission with proper field mapping
+  Map<String, dynamic> _prepareSubmissionData() {
+    final Map<String, dynamic> submissionData = {};
+    
+    // Map all questions to their values
+    for (final question in questions) {
+      final value = formData[question.id];
+      if (value != null) {
+        // Convert question text to field key
+        final fieldKey = _convertQuestionToFieldKey(question.text);
+        submissionData[fieldKey] = value;
+      }
+    }
+    
+    return submissionData;
+  }
+
+  // Convert question text to database field key
+  String _convertQuestionToFieldKey(String questionText) {
+    return questionText
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
+  }
+
+  // Get dummy image URLs (to be replaced with actual implementation)
+  Map<String, List<String>> _getDummyImageUrls() {
+    return {
+      'exterior_front': [
+        'https://firebasestorage.googleapis.com/dummy/exterior_front_1.jpg',
+        'https://firebasestorage.googleapis.com/dummy/exterior_front_2.jpg',
+      ],
+      'exterior_back': [
+        'https://firebasestorage.googleapis.com/dummy/exterior_back_1.jpg',
+      ],
+      'roof_overview': [
+        'https://firebasestorage.googleapis.com/dummy/roof_overview_1.jpg',
+        'https://firebasestorage.googleapis.com/dummy/roof_overview_2.jpg',
+      ],
+      'damages': [
+        'https://firebasestorage.googleapis.com/dummy/damage_1.jpg',
+        'https://firebasestorage.googleapis.com/dummy/damage_2.jpg',
+      ],
+    };
+  }
+
+  // // Show options after successful submission
+  // void _showReportOptions() {
+  //   Get.dialog(
+  //     AlertDialog(
+  //       title: const Text('What would you like to do next?'),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           ListTile(
+  //             leading: const Icon(Icons.description),
+  //             title: const Text('View Report'),
+  //             onTap: () {
+  //               Get.back();
+  //               viewSubmittedReport();
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: const Icon(Icons.add_circle_outline),
+  //             title: const Text('Start New Report'),
+  //             onTap: () {
+  //               Get.back();
+  //               startNewReport();
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: const Icon(Icons.list),
+  //             title: const Text('View All Reports'),
+  //             onTap: () {
+  //               Get.back();
+  //               viewAllReports();
+  //             },
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Get.back(),
+  //           child: const Text('Close'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // View the submitted report
+  void viewSubmittedReport() {
+    if (lastSubmittedReportId.value.isNotEmpty) {
+      // Navigate to report view page
+      Get.toNamed('/report-view', arguments: {
+        'reportId': lastSubmittedReportId.value,
+      });
+    }
+  }
+
+  // Start a new report
+  void startNewReport() {
+    resetForm();
     Get.snackbar(
-      'Success',
-      'Questionnaire submitted successfully!',
+      'New Report',
+      'Ready to start a new inspection report',
       snackPosition: SnackPosition.TOP,
       backgroundColor: Get.theme.colorScheme.primary,
       colorText: Get.theme.colorScheme.onPrimary,
     );
+  }
 
-    return true;
+  // View all reports
+  void viewAllReports() {
+    Get.toNamed('/reports-list');
+  }
+
+  // Legacy submit method (for backward compatibility)
+  bool submitForm() {
+    return submitInspectionReport() as bool;
   }
 
   // Method to reset form
   void resetForm() {
+    final InspectionPhotosController photosController = Get.find<InspectionPhotosController>();
+    photosController.clearData(); // Clear all photos in the controller
     formData.clear();
     fieldErrors.clear();
     isFormValid.value = false;
+    lastSubmittedReportId.value = '';
+    submissionError.value = '';
   }
 
   // Method to get form data for saving
@@ -233,25 +435,23 @@ class QuestionnaireController extends GetxController {
     );
   }
 
-  // Method to initialize default questions (call once)
-  Future<void> initializeDefaultQuestions() async {
-    try {
-      await _questionnaireService.initializeDefaultQuestions();
-      Get.snackbar(
-        'Success',
-        'Default questions initialized successfully!',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.primary,
-        colorText: Get.theme.colorScheme.onPrimary,
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to initialize questions: $e',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.error,
-        colorText: Get.theme.colorScheme.onError,
-      );
-    }
+  // Get form completion statistics
+  Map<String, dynamic> getFormStats() {
+    final totalQuestions = questions.length;
+    final answeredQuestions = formData.entries
+        .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
+        .length;
+    
+    return {
+      'total_questions': totalQuestions,
+      'answered_questions': answeredQuestions,
+      'completion_percentage': totalQuestions > 0 
+          ? (answeredQuestions / totalQuestions * 100).round()
+          : 0,
+      'remaining_questions': totalQuestions - answeredQuestions,
+    };
   }
+
+  // Check if form is ready for submission
+  bool get isReadyForSubmission => isFormValid.value && !isSubmitting.value;
 }
