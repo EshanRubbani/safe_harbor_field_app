@@ -79,39 +79,7 @@ class InspectionQuestionnaireView extends StatelessWidget {
                   );
                 }
 
-                if (controller.sections.isEmpty) {
-                  return Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.quiz_outlined,
-                            size: 48,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No questions available',
-                            style: theme.textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Initialize default questions to get started',
-                            style: theme.textTheme.bodyMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: controller.initializeDefaultQuestions,
-                            child: const Text('Initialize Questions'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
+              
                 // Form Content
                 return Expanded(
                   child: Padding(
@@ -183,10 +151,11 @@ class InspectionQuestionnaireView extends StatelessWidget {
             child: controller.isFormValid.value
                 ? FloatingActionButton.extended(
                     onPressed: () {
-                      if (controller.submitForm()) {
-                        // Navigate to next screen or perform action
-                        Get.toNamed(AppRoutes.inspection_report);
-                      }
+                      // if (controller.submitForm()) {
+                      //   // Navigate to next screen or perform action
+                      //   Get.toNamed(AppRoutes.inspection_report);
+                      // }
+                      Get.toNamed(AppRoutes.inspection_report);
                     },
                     icon: const Icon(Icons.check_circle_outline_rounded),
                     label: const Text('Submit Questionnaire'),
@@ -196,43 +165,21 @@ class InspectionQuestionnaireView extends StatelessWidget {
                 : const SizedBox.shrink(),
           )),
 
-      // App Bar with actions
-      appBar: AppBar(
-        title: const Text(''),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        actions: [
-          // // Initialize Questions Button (temporary)
-          // Obx(() {
-          //   if (controller.sections.isEmpty && !controller.isLoading) {
-          //     return TextButton.icon(
-          //       onPressed: controller.initializeDefaultQuestions,
-          //       icon:
-          //           Icon(Icons.add_circle_outline, color: colorScheme.primary),
-          //       label: Text('Init Questions',
-          //           style: TextStyle(color: colorScheme.primary)),
-          //     );
-          //   }
-          //   return const SizedBox.shrink();
-          // }),
-
-          // Save Draft Button
-          TextButton.icon(
-            onPressed: controller.saveDraft,
-            icon: Icon(Icons.save_rounded, color: colorScheme.primary),
-            label: Text('Save Draft',
-                style: TextStyle(color: colorScheme.primary)),
-          ),
-
-          // // Refresh Button
-          // IconButton(
-          //   onPressed: () => service.loadQuestions(),
-          //   icon: Icon(Icons.refresh, color: colorScheme.primary),
-          //   tooltip: 'Refresh Questions',
-          // ),
-        ],
-      ),
+  //     // App Bar with actions
+  //     appBar: AppBar(
+  //       title: const Text(''),
+  //       backgroundColor: Colors.transparent,
+  //       elevation: 0,
+  //       automaticallyImplyLeading: false,
+  //       actions: [
+  //               TextButton.icon(
+  //           onPressed: controller.saveDraft,
+  //           icon: Icon(Icons.save_rounded, color: colorScheme.primary),
+  //           label: Text('Save Draft',
+  //               style: TextStyle(color: colorScheme.primary)),
+  //         ),
+  // ],
+  //     ),
     );
   }
 
