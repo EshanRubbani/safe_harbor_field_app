@@ -1,12 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/inspection_report_model.dart';
 import 'inspection_photos_controller.dart';
 import 'inspection_questionaire_controller.dart';
 import '../services/inspection_report_submission_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
 
 /*
 InspectionReportsController
@@ -79,52 +81,85 @@ class InspectionReportsController extends GetxController {
   /// - Always updates the model from controllers first.
   /// - Persists to local storage.
   /// - Called automatically on every change.
+  /// - Prevents duplicate saves with debouncing
+  Timer? _saveDebounce;
+  bool _isSavingInProgress = false;
+  
   void saveCurrentReportProgress() {
+    // Prevent duplicate saves
+    if (_isSavingInProgress) {
+      print('[Save] Save already in progress, skipping...');
+      return;
+    }
+    
+    // Cancel any pending saves
+    _saveDebounce?.cancel();
+    
+    // Debounce saves to prevent rapid-fire saves
+    _saveDebounce = Timer(const Duration(milliseconds: 500), () {
+      _performSave();
+    });
+  }
+  
+  void _performSave() {
+    _isSavingInProgress = true;
     isSaving.value = true;
-    if (currentReport.value == null) {
-      print('[Save] No current report to save.');
-      isSaving.value = false;
-      return;
-    }
-    final report = currentReport.value!;
-    final formData = questionnaireController.getFormData();
-    final imagesMap = photosController.getAllPhotosAsMap();
-    // Skip saving if both formData and all photo lists are empty
-    if (formData.isEmpty && imagesMap.values.every((l) => l.isEmpty)) {
-      print('[WARNING] Skipping auto-save: No data to save');
-      isSaving.value = false;
-      return;
-    }
-    print('[DEBUG] Saving formData: ' + formData.toString());
-    print('[DEBUG] Saving images: ' + imagesMap.toString());
-    if (formData.isEmpty) print('[WARNING] formData is empty when saving!');
-    if (imagesMap.values.every((l) => l.isEmpty)) print('[WARNING] images are empty when saving!');
-    report.questionnaireResponses = formData;
-    report.images = imagesMap;
-    report.updatedAt = DateTime.now();
     
-    // Auto-assess completion status based on photos and questionnaire
-    if (report.status != InspectionReportStatus.uploaded) {
-      final totalQuestions = questionnaireController.totalQuestions;
-      if (report.isCompleted(totalQuestions: totalQuestions)) {
-        report.status = InspectionReportStatus.completed;
-        print('[Save] Report marked as completed: ${report.id}');
-      } else {
-        report.status = InspectionReportStatus.inProgress;
+    try {
+      if (currentReport.value == null) {
+        print('[Save] No current report to save.');
+        return;
       }
+      
+      final report = currentReport.value!;
+      final formData = questionnaireController.getFormData();
+      final imagesMap = photosController.getAllPhotosAsMap();
+      
+      // Skip saving if both formData and all photo lists are empty
+      if (formData.isEmpty && imagesMap.values.every((l) => l.isEmpty)) {
+        print('[WARNING] Skipping save: No data to save');
+        return;
+      }
+      
+      print('[DEBUG] Saving formData: ' + formData.toString());
+      print('[DEBUG] Saving images: ' + imagesMap.toString());
+      
+      report.questionnaireResponses = formData;
+      report.images = imagesMap;
+      report.updatedAt = DateTime.now();
+      
+      // Auto-assess completion status based on photos and questionnaire
+      if (report.status != InspectionReportStatus.uploaded) {
+        final totalQuestions = questionnaireController.totalQuestions;
+        if (report.isCompleted(totalQuestions: totalQuestions)) {
+          report.status = InspectionReportStatus.completed;
+          print('[Save] Report marked as completed: ${report.id}');
+        } else {
+          report.status = InspectionReportStatus.inProgress;
+        }
+      }
+      
+      // Check for existing report and prevent duplicates
+      final idx = localReports.indexWhere((r) => r.id == report.id);
+      if (idx >= 0) {
+        localReports[idx] = report;
+        print('[Save] Updated existing report in localReports: [32m${report.id}[0m');
+      } else {
+        // Double-check for duplicates before adding
+        if (!localReports.any((r) => r.id == report.id)) {
+          localReports.add(report);
+          print('[Save] Added new report to localReports: [32m${report.id}[0m');
+        } else {
+          print('[WARNING] Prevented duplicate report addition: ${report.id}');
+        }
+      }
+      
+      _saveLocalReportsToPrefs();
+      print('[Save] Saved report progress to local storage: ${report.id}');
+    } finally {
+      _isSavingInProgress = false;
+      isSaving.value = false;
     }
-    
-    final idx = localReports.indexWhere((r) => r.id == report.id);
-    if (idx >= 0) {
-      localReports[idx] = report;
-      print('[Save] Updated existing report in localReports:  [32m${report.id} [0m');
-    } else {
-      localReports.add(report);
-      print('[Save] Added new report to localReports:  [32m${report.id} [0m');
-    }
-    _saveLocalReportsToPrefs();
-    print('[Save] Saved report progress to local storage: ${report.id}');
-    isSaving.value = false;
   }
 
   /// Resume an incomplete report.
@@ -219,6 +254,16 @@ class InspectionReportsController extends GetxController {
       report.syncedToCloud = true;
       saveCurrentReportProgress();
       print('[Complete/Upload] Report uploaded to Firestore and marked as uploaded: ${report.id}');
+      
+      // Clean up uploaded reports from local storage after successful sync
+      Future.delayed(const Duration(seconds: 2), () {
+        _cleanupUploadedReports();
+      });
+      
+      // Clear current report to prevent duplication
+      currentReport.value = null;
+      questionnaireController.resetForm();
+      photosController.clearData();
     } else {
       print('[Complete/Upload] Failed to upload report: ${report.id}');
     }
@@ -324,6 +369,73 @@ class InspectionReportsController extends GetxController {
     }
   }
 
+  /// Upload a specific completed report to Firestore
+  Future<bool> uploadReport(String reportId) async {
+    final report = localReports.firstWhereOrNull((r) => r.id == reportId);
+    if (report == null) {
+      print('[Upload] Report not found: $reportId');
+      return false;
+    }
+
+    if (report.status == InspectionReportStatus.uploaded) {
+      print('[Upload] Report already uploaded: $reportId');
+      return true;
+    }
+
+    final totalQuestions = questionnaireController.totalQuestions;
+    if (!report.isCompleted(totalQuestions: totalQuestions)) {
+      print('[Upload] Report is not completed: $reportId');
+      Get.snackbar(
+        'Cannot Upload',
+        'This report is not complete. Please finish all photos and questionnaire responses.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    try {
+      print('[Upload] Uploading report to Firestore: $reportId');
+      final firestoreReportId = await reportService.submitInspectionReport(
+        questionnaireData: report.questionnaireResponses,
+        imageUrlsByCategory: report.images,
+      );
+
+      if (firestoreReportId != null) {
+        report.status = InspectionReportStatus.uploaded;
+        report.syncedToCloud = true;
+        report.updatedAt = DateTime.now();
+        
+        final idx = localReports.indexWhere((r) => r.id == reportId);
+        if (idx >= 0) {
+          localReports[idx] = report;
+        }
+        _saveLocalReportsToPrefs();
+        
+        print('[Upload] Report uploaded successfully: $reportId');
+        
+        // Clean up uploaded reports from local storage after successful sync
+        Future.delayed(const Duration(seconds: 2), () {
+          _cleanupUploadedReports();
+        });
+        
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('[Upload] Error uploading report $reportId: $e');
+      Get.snackbar(
+        'Upload Failed',
+        'Failed to upload report: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+  }
+
   /// Delete an in-progress report by id.
   Future<void> deleteInProgressReport(String reportId) async {
     final idx = localReports.indexWhere((r) => r.id == reportId && r.status != InspectionReportStatus.uploaded);
@@ -358,6 +470,29 @@ class InspectionReportsController extends GetxController {
     }
   }
 
+  /// Clean up uploaded reports from local storage
+  /// Keep only in-progress and completed reports locally
+  void _cleanupUploadedReports() {
+    final uploadedCount = localReports.where((r) => r.status == InspectionReportStatus.uploaded).length;
+    if (uploadedCount > 0) {
+      print('[Cleanup] Removing $uploadedCount uploaded reports from local storage...');
+      localReports.removeWhere((r) => r.status == InspectionReportStatus.uploaded);
+      _saveLocalReportsToPrefs();
+      print('[Cleanup] Local storage cleaned. Remaining reports: ${localReports.length}');
+    }
+  }
+  
+  /// Force manual cleanup of uploaded reports
+  void cleanupUploadedReports() {
+    _cleanupUploadedReports();
+  }
+  
+  @override
+  void onClose() {
+    _saveDebounce?.cancel();
+    super.onClose();
+  }
+  
   // Completed reports cannot be resumed or viewed in the app.
   // No read-only/view-only logic is present.
-} 
+}

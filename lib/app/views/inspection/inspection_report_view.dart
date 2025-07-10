@@ -22,166 +22,208 @@ class InspectionReportView extends StatelessWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inspection Reports'),
+      backgroundColor: const Color(0xFFF5F7FA),
+      // appBar: AppBar(
+      //   backgroundColor: Colors.white,
+      //   elevation: 0.5,
+      //   title: Row(
+      //     children: [
+      //       Container(
+      //         padding: const EdgeInsets.all(8),
+      //         decoration: BoxDecoration(
+      //           color: const Color(0xFF4285F4).withOpacity(0.1),
+      //           borderRadius: BorderRadius.circular(8),
+      //         ),
+      //         child: const Icon(
+      //           Icons.task_alt_rounded,
+      //           color: Color(0xFF4285F4),
+      //           size: 20,
+      //         ),
+      //       ),
+      //       const SizedBox(width: 12),
+      //       const Text(
+      //         'Completed Inspections',
+      //         style: TextStyle(
+      //           fontSize: 18,
+      //           fontWeight: FontWeight.w600,
+      //           color: Color(0xFF1F2937),
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      //   actions: [
+      //     Obx(() {
+      //       final isLoading = reportsController.isLoadingCloudReports.value;
+      //       return Container(
+      //         margin: const EdgeInsets.only(right: 16),
+      //         child: ElevatedButton.icon(
+      //           onPressed: isLoading ? null : () {
+      //             reportsController.loadLocalReports();
+      //             reportsController.fetchCloudReports();
+      //           },
+      //           icon: isLoading 
+      //               ? SizedBox(
+      //                   width: 16,
+      //                   height: 16,
+      //                   child: CircularProgressIndicator(
+      //                     strokeWidth: 2,
+      //                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      //                   ),
+      //                 )
+      //               : const Icon(Icons.sync_rounded, size: 16),
+      //           label: Text(
+      //             isLoading ? 'Syncing...' : 'Sync',
+      //             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+      //           ),
+      //           style: ElevatedButton.styleFrom(
+      //             backgroundColor: const Color(0xFF4285F4),
+      //             foregroundColor: Colors.white,
+      //             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      //             shape: RoundedRectangleBorder(
+      //               borderRadius: BorderRadius.circular(8),
+      //             ),
+      //             elevation: 0,
+      //           ),
+      //         ),
+      //       );
+      //     }),
+      //   ],
+      // ),
+       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurface),
+          onPressed: () => Get.back(),
+        ),
         actions: [
-          // Save status indicator in app bar
           Obx(() {
-            final isSaving = reportsController.isSaving.value;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: isSaving
-                    ? Row(
-                        key: const ValueKey('saving'),
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          const SizedBox(width: 6),
-                          Text('Saving...', style: TextStyle(color: colorScheme.primary, fontSize: 12)),
-                        ],
+            final isLoading = reportsController.isLoadingCloudReports.value;
+            return Container(
+              margin: const EdgeInsets.only(right: 16),
+              child: ElevatedButton.icon(
+                onPressed: isLoading ? null : () {
+                  reportsController.loadLocalReports();
+                  reportsController.fetchCloudReports();
+                },
+                icon: isLoading 
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
                       )
-                    : Row(
-                        key: const ValueKey('saved'),
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green, size: 16),
-                          const SizedBox(width: 4),
-                          Text('Saved', style: TextStyle(color: Colors.green, fontSize: 12)),
-                        ],
-                      ),
+                    : const Icon(Icons.sync_rounded, size: 16),
+                label: Text(
+                  isLoading ? 'Refreshing...' : 'Refresh',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4285F4),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                ),
               ),
             );
           }),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () {
-              reportsController.loadLocalReports();
-              reportsController.fetchCloudReports();
-            },
-          ),
         ],
       ),
-      body: Obx(() {
-        // Combine local and cloud reports, deduplicate by id (cloud takes precedence)
-        final local = reportsController.localReports;
-        final cloud = reportsController.cloudReports;
-        final Map<String, InspectionReportModel> allReportsMap = {
-          for (var r in local) r.id: r,
-          for (var r in cloud) r.id: r,
-        };
-        final allReports = allReportsMap.values.toList()
-          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      body: Container(
+        child: Obx(() {
+          // Combine local and cloud reports, deduplicate by id (cloud takes precedence)
+          final local = reportsController.localReports;
+          final cloud = reportsController.cloudReports;
+          final Map<String, InspectionReportModel> allReportsMap = {
+            for (var r in local) r.id: r,
+            for (var r in cloud) r.id: r,
+          };
+          final allReports = allReportsMap.values.toList()
+            ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
-        if (allReports.isEmpty) {
-          return const Center(child: Text('No reports found.'));
-        }
-
-        return Column(
-          children: [
-            _buildHeaderCard(colorScheme, theme),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16.0),
-                itemCount: allReports.length,
-                itemBuilder: (context, idx) {
-                  final report = allReports[idx];
-                  // Get the total questions from the questionnaire controller
-                  final questionnaireController = Get.find<QuestionnaireController>();
-                  final totalQuestions = questionnaireController.totalQuestions;
-                  
-                  final completionTag = report.completionTag(totalQuestions: totalQuestions);
-                  final completionStats = report.completionStats(totalQuestions: totalQuestions);
-                  
-                  Color tagColor;
-                  switch (report.completionTagColor(totalQuestions: totalQuestions)) {
-                    case 'blue':
-                      tagColor = Colors.blue;
-                      break;
-                    case 'orange':
-                      tagColor = Colors.orange;
-                      break;
-                    case 'red':
-                    default:
-                      tagColor = Colors.red;
-                      break;
-                  }
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    elevation: 2,
-                    child: ListTile(
-                      title: Text(
-                        'Report ${report.id.split('_').last}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Updated: ${_formatDate(report.updatedAt)}'),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                'Progress: ${completionStats['completion_percentage']}% ',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurface.withOpacity(0.7),
-                                ),
-                              ),
-                              Text(
-                                '(${completionStats['answered_questions']}/${completionStats['total_questions']} questions)',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurface.withOpacity(0.7),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (completionStats['primary_risk_photos'] > 0)
-                            Text(
-                              'Primary Risk Photos: ${completionStats['primary_risk_photos']}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.green,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                        ],
-                      ),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: tagColor,
-                          borderRadius: BorderRadius.circular(16),
+          return ListView.builder(
+            padding: const EdgeInsets.only(top: 0, bottom: 16),
+            itemCount: allReports.isEmpty ? 2 : allReports.length + 2, // 0: header, 1: subtitle, rest: reports
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                // Header card
+                return _buildHeaderCard(colorScheme, theme);
+              }
+              if (index == 1) {
+                // Subtitle header
+                return const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text(
+                    'View synced and pending reports.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                );
+              }
+              final reportIndex = index - 2;
+              if (allReports.isEmpty) {
+                // Only show empty state after header and subtitle
+                if (index == 2) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
                         ),
-                        child: Text(
-                          completionTag,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                        const SizedBox(height: 16),
+                        Text(
+                          'No reports found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
                           ),
                         ),
-                      ),
-                      onTap: () {
-                        if (completionTag == 'In Progress' || completionTag == 'Completed') {
-                          reportsController.resumeReport(report.id);
-                          Get.toNamed(AppRoutes.inspection_photos);
-                        }
-                      },
+                        const SizedBox(height: 8),
+                        Text(
+                          'View synced and pending reports.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
                     ),
                   );
-                },
-              ),
-            ),
-          ],
-        );
-      }),
+                } else {
+                  return const SizedBox.shrink();
+                }
+              }
+              if (reportIndex >= allReports.length) return const SizedBox.shrink();
+              final report = allReports[reportIndex];
+              // Get the total questions from the questionnaire controller
+              final questionnaireController = Get.find<QuestionnaireController>();
+              final totalQuestions = questionnaireController.totalQuestions;
+              final completionTag = report.completionTag(totalQuestions: totalQuestions);
+              final completionStats = report.completionStats(totalQuestions: totalQuestions);
+              return Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, reportIndex == allReports.length - 1 ? 20 : 0),
+                child: _buildReportCard(
+                  report: report,
+                  completionTag: completionTag,
+                  completionStats: completionStats,
+                  reportsController: reportsController,
+                ),
+              );
+            },
+          );
+        }),
+      ),
     );
   }
 
@@ -278,173 +320,493 @@ class InspectionReportView extends StatelessWidget {
     );
   }
 
-  Widget _buildCompleteAndSaveSection(ColorScheme colorScheme, ThemeData theme) {
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: colorScheme.surface,
-          border: Border.all(
-            color: colorScheme.primary.withOpacity(0.1),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Section Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.save_alt_rounded,
-                    size: 20,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 12.0),
-                Text(
-                  "Complete and Save",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.primary,
-                        fontSize: 16,
-                      ) ??
-                      TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.primary,
-                      ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16.0),
-
-            // Description
-            Text(
-              "This will save all photos and answers to your device. You can view it on the \"Completed Inspections\" page.",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.7),
-                    height: 1.5,
-                    fontSize: 14,
-                  ) ??
-                  TextStyle(
-                    fontSize: 14.0,
-                    color: colorScheme.onSurface.withOpacity(0.7),
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompleteButton(ColorScheme colorScheme, ThemeData theme) {
+  Widget _buildReportCard({
+    required InspectionReportModel report,
+    required String completionTag,
+    required Map<String, dynamic> completionStats,
+    required InspectionReportsController reportsController,
+  }) {
+    // Extract address and policy info from questionnaire responses
+    final responses = report.questionnaireResponses;
+    final address = _extractAddress(responses, report.id);
+    final policyNumber = _extractPolicyNumber(responses);
+    
+    Color tagColor;
+    Color tagBackgroundColor;
+    IconData tagIcon;
+    
+    switch (completionTag) {
+      case 'Synced':
+        tagColor = const Color(0xFF059669);
+        tagBackgroundColor = const Color(0xFFD1FAE5);
+        tagIcon = Icons.cloud_done_rounded;
+        break;
+      case 'Completed':
+      case 'Pending':
+        tagColor = const Color(0xFFD97706);
+        tagBackgroundColor = const Color(0xFFFEF3C7);
+        tagIcon = Icons.schedule_rounded;
+        break;
+      default:
+        tagColor = const Color(0xFFDC2626);
+        tagBackgroundColor = const Color(0xFFFEE2E2);
+        tagIcon = Icons.warning_rounded;
+    }
+    
     return Container(
-      width: double.infinity,
-      height: 56.0,
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            const Color(0xFF28A745), // Green color from the image
-            const Color(0xFF20A841),
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF28A745).withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            // Handle complete and save action
-            _handleCompleteAndSave();
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with address and status
+            Row(
               children: [
-                Icon(
-                  Icons.save_alt_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 12.0),
-                Text(
-                  "Complete & Save Inspection",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        fontSize: 16,
-                      ) ??
-                      const TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        address,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1F2937),
+                        ),
                       ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.policy_rounded,
+                            size: 14,
+                            color: Color(0xFF6B7280),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Policy #: $policyNumber',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: Color(0xFF6B7280),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _getDateLabel(completionTag, report.updatedAt),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: tagBackgroundColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        tagIcon,
+                        size: 12,
+                        color: tagColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        completionTag == 'Completed' ? 'Pending' : completionTag,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: tagColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
+            
+            const SizedBox(height: 16),
+            
+            // Action button
+            SizedBox(
+              width: double.infinity,
+              child: _buildActionButton(
+                report: report,
+                completionTag: completionTag,
+                reportsController: reportsController,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  void _handleCompleteAndSave() async {
-    final controller = Get.find<QuestionnaireController>();
-    final success = await controller.submitInspectionReport();
-    if (success) {
-      Get.snackbar(
-        "Success",
-        "Inspection report uploaded successfully!",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF28A745),
-        colorText: Colors.white,
-        icon: const Icon(Icons.check_circle, color: Colors.white),
+  
+  Widget _buildActionButton({
+    required InspectionReportModel report,
+    required String completionTag,
+    required InspectionReportsController reportsController,
+  }) {
+    if (completionTag == 'Synced') {
+      return ElevatedButton.icon(
+        onPressed: () {
+          // View report action
+          Get.snackbar(
+            'View Report',
+            'Report viewing feature coming soon',
+            snackPosition: SnackPosition.TOP,
+          );
+        },
+        icon: const Icon(Icons.visibility_rounded, size: 16),
+        label: const Text(
+          'View Report',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF374151),
+          side: const BorderSide(color: Color(0xFFD1D5DB)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          elevation: 0,
+        ),
       );
-      // Optionally navigate to completed inspections page
-      // Get.offNamed(AppRoutes.completedInspections);
+    } else if (completionTag == 'Completed') {
+      return Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final success = await reportsController.uploadReport(report.id);
+                if (success) {
+                  Get.snackbar(
+                    'Success',
+                    'Report uploaded successfully!',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                }
+              },
+              icon: const Icon(Icons.cloud_upload_rounded, size: 16),
+              label: const Text(
+                'Upload Now',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4285F4),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () {
+              _showDeleteConfirmation(report.id, reportsController);
+            },
+            icon: const Icon(Icons.delete_outline_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFFEE2E2),
+              foregroundColor: const Color(0xFFDC2626),
+              padding: const EdgeInsets.all(12),
+            ),
+          ),
+        ],
+      );
     } else {
-      Get.snackbar(
-        "Error",
-        controller.submissionError.value.isNotEmpty
-            ? controller.submissionError.value
-            : "Failed to upload inspection report.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        icon: const Icon(Icons.error, color: Colors.white),
+      // In Progress
+      return Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                reportsController.resumeReport(report.id);
+                Get.toNamed(AppRoutes.inspection_photos);
+              },
+              icon: const Icon(Icons.edit_rounded, size: 16),
+              label: const Text(
+                'Continue',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () {
+              _showDeleteConfirmation(report.id, reportsController);
+            },
+            icon: const Icon(Icons.delete_outline_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFFEE2E2),
+              foregroundColor: const Color(0xFFDC2626),
+              padding: const EdgeInsets.all(12),
+            ),
+          ),
+        ],
       );
+    }
+  }
+  
+  void _showDeleteConfirmation(String reportId, InspectionReportsController reportsController) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Text(
+          'Delete Report',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to delete this report? This action cannot be undone.',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back();
+              await reportsController.deleteInProgressReport(reportId);
+              Get.snackbar(
+                'Deleted',
+                'Report has been deleted successfully',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _extractAddress(Map<String, dynamic> responses, String reportId) {
+    // Extract Insured Street Address, State, and Zip Code from questionnaire
+    // Support both enhanced structure and legacy structure
+    final streetAddressFields = [
+      'insured_street_address',
+      'street_address', 
+      'property_address',
+      'insured_address',
+      'address',
+      'street'
+    ];
+    
+    final stateFields = [
+      'insured_state',
+      'state',
+      'property_state'
+    ];
+    
+    final zipFields = [
+      'insured_zip_code',
+      'zip_code',
+      'postal_code',
+      'insured_zip',
+      'zip'
+    ];
+    
+    String? streetAddress;
+    String? state;
+    String? zipCode;
+    
+    // Helper function to extract value from enhanced or legacy structure
+    String? extractValue(Map<String, dynamic> data, List<String> fieldKeys) {
+      for (final field in fieldKeys) {
+        // Check enhanced structure first
+        final enhancedValue = data[field];
+        if (enhancedValue != null) {
+          if (enhancedValue is Map<String, dynamic> && enhancedValue.containsKey('value')) {
+            final value = enhancedValue['value'];
+            if (value != null && value.toString().trim().isNotEmpty) {
+              return value.toString().trim();
+            }
+          } else if (enhancedValue.toString().trim().isNotEmpty) {
+            // Legacy structure or direct value
+            return enhancedValue.toString().trim();
+          }
+        }
+      }
+      
+      // Also search by question text patterns for additional fallback
+      for (final entry in data.entries) {
+        final key = entry.key.toLowerCase();
+        final value = entry.value;
+        
+        // Check if this looks like an address field based on key patterns
+        for (final fieldKey in fieldKeys) {
+          if (key.contains(fieldKey.replaceAll('_', ' ')) || key.contains(fieldKey)) {
+            if (value is Map<String, dynamic> && value.containsKey('value')) {
+              final extractedValue = value['value'];
+              if (extractedValue != null && extractedValue.toString().trim().isNotEmpty) {
+                return extractedValue.toString().trim();
+              }
+            } else if (value != null && value.toString().trim().isNotEmpty) {
+              return value.toString().trim();
+            }
+          }
+        }
+      }
+      
+      return null;
+    }
+    
+    // Extract address components
+    streetAddress = extractValue(responses, streetAddressFields);
+    state = extractValue(responses, stateFields);
+    zipCode = extractValue(responses, zipFields);
+    
+    // Build address string
+    final addressParts = <String>[];
+    if (streetAddress != null) addressParts.add(streetAddress);
+    if (state != null) addressParts.add(state);
+    if (zipCode != null) addressParts.add(zipCode);
+    
+    // If we have address components, join them
+    if (addressParts.isNotEmpty) {
+      return addressParts.join(', ');
+    }
+    
+    // Fallback to report ID if no address found
+    return 'Report ${reportId.split('_').last}';
+  }
+  
+  String _extractPolicyNumber(Map<String, dynamic> responses) {
+    final policyFields = [
+      'policy_number',
+      'pol_number',
+      'policy_no',
+      'policy_num',
+      'policy'
+    ];
+    
+    // Helper function to extract value from enhanced or legacy structure
+    String? extractValue(Map<String, dynamic> data, List<String> fieldKeys) {
+      for (final field in fieldKeys) {
+        // Check enhanced structure first
+        final enhancedValue = data[field];
+        if (enhancedValue != null) {
+          if (enhancedValue is Map<String, dynamic> && enhancedValue.containsKey('value')) {
+            final value = enhancedValue['value'];
+            if (value != null && value.toString().trim().isNotEmpty) {
+              return value.toString().trim();
+            }
+          } else if (enhancedValue.toString().trim().isNotEmpty) {
+            // Legacy structure or direct value
+            return enhancedValue.toString().trim();
+          }
+        }
+      }
+      
+      // Also search by question text patterns for additional fallback
+      for (final entry in data.entries) {
+        final key = entry.key.toLowerCase();
+        final value = entry.value;
+        
+        // Check if this looks like a policy field based on key patterns
+        for (final fieldKey in fieldKeys) {
+          if (key.contains(fieldKey.replaceAll('_', ' ')) || key.contains(fieldKey)) {
+            if (value is Map<String, dynamic> && value.containsKey('value')) {
+              final extractedValue = value['value'];
+              if (extractedValue != null && extractedValue.toString().trim().isNotEmpty) {
+                return extractedValue.toString().trim();
+              }
+            } else if (value != null && value.toString().trim().isNotEmpty) {
+              return value.toString().trim();
+            }
+          }
+        }
+      }
+      
+      return null;
+    }
+    
+    final policyNumber = extractValue(responses, policyFields);
+    return policyNumber ?? 'N/A';
+  }
+  
+  String _getDateLabel(String completionTag, DateTime date) {
+    if (completionTag == 'In Progress') {
+      return 'Last updated: ${_formatDate(date)}';
+    } else {
+      return 'Completed: ${_formatDate(date)}';
     }
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.month}/${date.day}/${date.year}';
   }
 }

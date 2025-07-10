@@ -198,27 +198,51 @@ class InspectionQuestionnaireView extends StatelessWidget {
         ),
       ),
 
-      // Floating Action Button
-      floatingActionButton: Obx(() =>
-            controller.viewOnly.value
-                ? const SizedBox.shrink()
-                : AnimatedScale(
-                    scale: controller.isFormValid.value ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: controller.isFormValid.value
-                        ? FloatingActionButton.extended(
-                            onPressed: () {
-                              Get.toNamed(AppRoutes.inspection_report_finalize);
-                            },
-                            icon: const Icon(Icons.check_circle_outline_rounded),
-                            label: const Text('Submit Questionnaire'),
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: Colors.white,
-                          )
-                        : const SizedBox.shrink(),
+      // Floating Action Button with Progress
+      floatingActionButton: Obx(() {
+        if (controller.viewOnly.value) {
+          return const SizedBox.shrink();
+        }
+        
+        final answeredQuestions = controller.answeredQuestions;
+        final totalQuestions = controller.totalQuestions;
+        final answeredRequired = controller.answeredRequiredQuestions;
+        final requiredQuestions = controller.requiredQuestions;
+        final isFormValid = controller.isFormValid.value;
+        
+        // Always show the button with progress information
+        return FloatingActionButton.extended(
+          onPressed: () async {
+            if (isFormValid) {
+              await controller.saveFormDataManually();
+              Get.toNamed(AppRoutes.inspection_report_finalize);
+            } else {
+              // Show progress information
+              Get.snackbar(
+                'Form Incomplete',
+                'Please answer all required questions.\nRequired: $answeredRequired/$requiredQuestions\nTotal: $answeredQuestions/$totalQuestions',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.orange,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 4),
+              );
+            }
+          },
+          icon: Icon(
+            isFormValid ? Icons.check_circle_outline_rounded : Icons.assignment_outlined,
           ),
+          label: Text(
+            isFormValid 
+                ? 'Submit Questionnaire'
+                : '$answeredQuestions/$totalQuestions Questions',
+          ),
+          backgroundColor: isFormValid ? colorScheme.primary : Colors.orange,
+          foregroundColor: Colors.white,
+        );
+      }),
         ),
-      ),
+
+    
     );
   }
 

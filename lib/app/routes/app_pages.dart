@@ -40,7 +40,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.inspection_report_finalize,
-      page: () => const InspectionReportFinalizeView(),
+      page: () =>  InspectionReportFinalizeView(),
     ),
   ];
 }

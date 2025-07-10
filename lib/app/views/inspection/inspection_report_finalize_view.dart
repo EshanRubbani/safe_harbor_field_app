@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
 import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
 
 class InspectionReportFinalizeView extends StatelessWidget {
-  const InspectionReportFinalizeView({super.key});
+   InspectionReportFinalizeView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +252,17 @@ class InspectionReportFinalizeView extends StatelessWidget {
     );
   }
 
+  bool _isSubmitting = false;
+  
   Future<void> _handleCompleteAndSave() async {
+    // Prevent duplicate submissions
+    if (_isSubmitting) {
+      print('[Finalize] Already submitting, ignoring duplicate request');
+      return;
+    }
+    
+    _isSubmitting = true;
+    
     try {
       // Show loading state
       Get.dialog(
@@ -362,6 +371,8 @@ class InspectionReportFinalizeView extends StatelessWidget {
         margin: const EdgeInsets.all(16),
         borderRadius: 12,
       );
+    } finally {
+      _isSubmitting = false;
     }
   }
 }

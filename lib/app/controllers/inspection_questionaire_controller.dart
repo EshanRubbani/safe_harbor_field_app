@@ -105,7 +105,12 @@ class QuestionnaireController extends GetxController {
   void updateFormData(String questionId, dynamic value) {
     formData[questionId] = value;
     fieldErrors[questionId] = false;
+    
+    // Immediately validate the form to update button state
     validateForm();
+    
+    print('[UpdateForm] Question $questionId updated with value: $value');
+    print('[UpdateForm] Form valid: ${isFormValid.value}, Answered: $answeredQuestions/$totalQuestions');
   }
 
   // Get current value for a question
@@ -218,6 +223,7 @@ class QuestionnaireController extends GetxController {
   void validateForm() {
     bool isValid = true;
 
+    // Only validate required questions for form validity
     for (final question in questions) {
       if (question.isRequired) {
         final value = formData[question.id];
@@ -226,15 +232,20 @@ class QuestionnaireController extends GetxController {
           break;
         }
       }
-      // Use enhanced validation for all questions
-      final error = validateQuestion(question, formData[question.id]);
-      if (error != null) {
-        isValid = false;
-        break;
+      
+      // Check validation for answered questions only (don't fail on empty optional questions)
+      final value = formData[question.id];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        final error = validateQuestion(question, value);
+        if (error != null) {
+          isValid = false;
+          break;
+        }
       }
     }
 
     isFormValid.value = isValid;
+    print('[Validation] Form valid: $isValid, Answered: $answeredQuestions, Total: $totalQuestions');
   }
 
   // Submit the complete inspection report
@@ -314,32 +325,27 @@ class QuestionnaireController extends GetxController {
     }
   }
 
-  // Prepare form data for submission with proper field mapping
+  // Prepare form data for submission with enhanced structure
   Map<String, dynamic> _prepareSubmissionData() {
+    final formDataForSubmission = getFormData();
     final Map<String, dynamic> submissionData = {};
     
-    // Map all questions to their values
-    for (final question in questions) {
-      final value = formData[question.id];
-      if (value != null) {
-        // Convert question text to field key
-        final fieldKey = _convertQuestionToFieldKey(question.text);
-        submissionData[fieldKey] = value;
+    // Convert the enhanced structure to a submission-friendly format
+    formDataForSubmission.forEach((fieldKey, fieldData) {
+      if (fieldData is Map<String, dynamic> && fieldData.containsKey('value')) {
+        // Store both the value and metadata for comprehensive data
+        submissionData[fieldKey] = fieldData;
+      } else {
+        // Fallback for any legacy data
+        submissionData[fieldKey] = fieldData;
       }
-    }
+    });
     
+    print('[DEBUG] Prepared submission data: ' + submissionData.toString());
     return submissionData;
   }
 
-  // Convert question text to database field key
-  String _convertQuestionToFieldKey(String questionText) {
-    return questionText
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
-        .replaceAll(RegExp(r'\s+'), '_')
-        .replaceAll(RegExp(r'_+'), '_')
-        .replaceAll(RegExp(r'^_|_$'), '');
-  }
+
 
   // Get dummy image URLs (to be replaced with actual implementation)
   Map<String, List<String>> _getDummyImageUrls() {
@@ -451,7 +457,7 @@ class QuestionnaireController extends GetxController {
     _isSavingManually.value = false;
   }
 
-  // Method to get form data for saving with consistent structure
+  // Method to get form data for saving with enhanced structure including question text
   Map<String, dynamic> getFormData() {
     final Map<String, dynamic> structuredData = <String, dynamic>{};
     
@@ -460,29 +466,33 @@ class QuestionnaireController extends GetxController {
       if (questionId != null && value != null) {
         final question = _questionnaireService.getQuestionById(questionId);
         if (question != null) {
+          // Create a field key based on question text for better extraction
+          final fieldKey = _convertQuestionToFieldKey(question.text);
+          
           // Structure data based on question type for consistency
+          dynamic processedValue;
           switch (question.type) {
             case QuestionType.date:
               // Ensure date is stored as ISO string
               if (value is DateTime) {
-                structuredData[questionId] = value.toIso8601String();
+                processedValue = value.toIso8601String();
               } else if (value is String && value.isNotEmpty) {
                 try {
                   final dateTime = DateTime.parse(value);
-                  structuredData[questionId] = dateTime.toIso8601String();
+                  processedValue = dateTime.toIso8601String();
                 } catch (e) {
-                  structuredData[questionId] = value;
+                  processedValue = value;
                 }
               } else {
-                structuredData[questionId] = value;
+                processedValue = value;
               }
               break;
             case QuestionType.number:
               // Ensure numbers are stored as strings for consistency
               if (value is num) {
-                structuredData[questionId] = value.toString();
+                processedValue = value.toString();
               } else {
-                structuredData[questionId] = value.toString();
+                processedValue = value.toString();
               }
               break;
             case QuestionType.yesNo:
@@ -492,31 +502,71 @@ class QuestionnaireController extends GetxController {
             case QuestionType.longText:
             default:
               // Store as string for consistency
-              structuredData[questionId] = value.toString();
+              processedValue = value.toString();
               break;
           }
+          
+          // Store with both field key and enhanced metadata
+          structuredData[fieldKey] = {
+            'value': processedValue,
+            'question_id': questionId,
+            'question_text': question.text,
+            'question_type': question.type.toString().split('.').last,
+            'section': question.section ?? 'General'
+          };
         } else {
-          // If question not found, store as-is but convert to string
-          structuredData[questionId] = value.toString();
+          // If question not found, store with fallback structure
+          structuredData[questionId] = {
+            'value': value.toString(),
+            'question_id': questionId,
+            'question_text': 'Unknown Question',
+            'question_type': 'unknown',
+            'section': 'Unknown'
+          };
         }
       }
     });
     
-    print('[DEBUG] getFormData returning structured data: ' + structuredData.toString());
+    print('[DEBUG] getFormData returning enhanced structured data: ' + structuredData.toString());
     if (structuredData.isEmpty) print('[WARNING] getFormData: structured data is empty!');
     return structuredData;
   }
+  
+  // Convert question text to database field key
+  String _convertQuestionToFieldKey(String questionText) {
+    return questionText
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
+  }
 
   // Method to manually save form data
+  Timer? _manualSaveDebounce;
+  
   Future<void> saveFormDataManually() async {
-    if (_isSavingManually.value) return; // Prevent double saves
+    if (_isSavingManually.value) {
+      print('[Manual Save] Save already in progress, ignoring duplicate request');
+      return; // Prevent double saves
+    }
+    
+    // Debounce manual saves to prevent rapid clicks
+    _manualSaveDebounce?.cancel();
+    _manualSaveDebounce = Timer(const Duration(milliseconds: 200), () {
+      _performManualSave();
+    });
+  }
+  
+  Future<void> _performManualSave() async {
+    if (_isSavingManually.value) return;
     
     _isSavingManually.value = true;
     print('[Manual Save] Starting manual save...');
     
     try {
       final reportsController = Get.find<InspectionReportsController>();
-      await Future.delayed(const Duration(milliseconds: 500)); // Small delay for UI feedback
+      await Future.delayed(const Duration(milliseconds: 300)); // Small delay for UI feedback
       reportsController.saveCurrentReportProgress();
       _hasUnsavedChanges.value = false;
       print('[Manual Save] Manual save completed successfully');
@@ -575,15 +625,22 @@ class QuestionnaireController extends GetxController {
     // Load the saved data with proper structure validation
     final Map<String, dynamic> validatedData = <String, dynamic>{};
     
-    // Ensure all loaded data is properly typed and validated
+    // Handle both new enhanced structure and legacy structure
     data.forEach((key, value) {
       if (key != null && value != null) {
-        // Handle different data types appropriately
-        if (value is String || value is num || value is bool) {
-          validatedData[key] = value;
+        if (value is Map<String, dynamic> && value.containsKey('value') && value.containsKey('question_id')) {
+          // New enhanced structure - extract the actual value and use question_id as key
+          final questionId = value['question_id'] as String;
+          final actualValue = value['value'];
+          validatedData[questionId] = actualValue;
         } else {
-          // Convert complex types to string representation
-          validatedData[key] = value.toString();
+          // Legacy structure or simple key-value pairs
+          if (value is String || value is num || value is bool) {
+            validatedData[key] = value;
+          } else {
+            // Convert complex types to string representation
+            validatedData[key] = value.toString();
+          }
         }
       }
     });
@@ -637,7 +694,43 @@ class QuestionnaireController extends GetxController {
         .where((entry) => entry.value != null && entry.value.toString().trim().isNotEmpty)
         .length;
   }
+  
+  // Get number of required questions
+  int get requiredQuestions {
+    return questions.where((q) => q.isRequired).length;
+  }
+  
+  // Get number of answered required questions
+  int get answeredRequiredQuestions {
+    int count = 0;
+    for (final question in questions) {
+      if (question.isRequired) {
+        final value = formData[question.id];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  // Ensures form is valid by answering all questions
+  void ensureFormValidity() {
+    final questionsCount = totalQuestions;
+    if (questionsCount > 0 && answeredQuestions >= questionsCount) {
+      isFormValid.value = true;
+    } else {
+      isFormValid.value = false;
+    }
+    print("[Form Check] $answeredQuestions out of $totalQuestions answered");
+  }
 
   // Check if all questions are answered
   bool get isAllQuestionsAnswered => answeredQuestions >= totalQuestions;
+  
+  @override
+  void onClose() {
+    _manualSaveDebounce?.cancel();
+    super.onClose();
+  }
 }
