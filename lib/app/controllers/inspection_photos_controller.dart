@@ -163,6 +163,7 @@ class InspectionPhotosController extends GetxController {
             await _processAndAddImage(image, photoType);
           }
           _checkValidation();
+          // Get.back();
           Get.snackbar('Success', 'Photo(s) added successfully', 
                       snackPosition: SnackPosition.TOP);
         }
@@ -176,6 +177,7 @@ class InspectionPhotosController extends GetxController {
         if (image != null) {
           await _processAndAddImage(image, photoType);
           _checkValidation();
+          // Get.back();
           Get.snackbar('Success', 'Photo added successfully', 
                       snackPosition: SnackPosition.TOP);
         }

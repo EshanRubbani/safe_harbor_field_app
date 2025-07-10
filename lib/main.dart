@@ -27,11 +27,13 @@ void main() async {
   
   
   Get.put(ThemeController(), permanent: true);
-  Get.put(AuthController(), permanent: true);
   Get.put(InspectionPhotosController(), permanent: true);
   Get.put(QuestionnaireController(), permanent: true);
   Get.put(InspectionReportsController(), permanent: true);
   Get.put(QuestionnaireService(), permanent: true);
+  
+  // Initialize AuthController last to prevent premature navigation
+  Get.put(AuthController(), permanent: true);
 
   runApp(const MyApp());
 }

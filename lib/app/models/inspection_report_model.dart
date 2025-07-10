@@ -36,8 +36,12 @@ class InspectionReportModel {
         status: _statusFromString(json['status'] as String),
         createdAt: DateTime.parse(json['createdAt'] as String),
         updatedAt: DateTime.parse(json['updatedAt'] as String),
-        questionnaireResponses: Map<String, dynamic>.from(json['questionnaireResponses'] as Map),
-        images: (json['images'] as Map<String, dynamic>).map((k, v) => MapEntry(k, List<String>.from(v))),
+        questionnaireResponses: json['questionnaireResponses'] != null 
+            ? Map<String, dynamic>.from(json['questionnaireResponses'] as Map)
+            : <String, dynamic>{},
+        images: json['images'] != null 
+            ? (json['images'] as Map<String, dynamic>).map((k, v) => MapEntry(k, List<String>.from(v)))
+            : <String, List<String>>{},
         syncedToCloud: json['syncedToCloud'] as bool? ?? false,
         summary: json['summary'] != null ? Map<String, dynamic>.from(json['summary']) : null,
         version: json['version'] as String? ?? '1.0',
@@ -60,7 +64,7 @@ class InspectionReportModel {
         'status': status.toString(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
-        'questionnaire_responses': questionnaireResponses,
+        'questionnaireResponses': questionnaireResponses,
         'images': images,
         'syncedToCloud': syncedToCloud,
         'summary': summary,

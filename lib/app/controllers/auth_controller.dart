@@ -28,6 +28,9 @@ class AuthController extends GetxController {
   }
 
   _setInitialScreen(User? user) async {
+    // Wait for the widget tree to be built before navigating
+    await Future.delayed(const Duration(milliseconds: 100));
+    
     if (user == null) {
       Get.offAllNamed(AppRoutes.LOGIN);
     } else {

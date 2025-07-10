@@ -210,18 +210,38 @@ class InspectionReportsController extends GetxController {
 
   /// Load all local reports from SharedPreferences.
   void loadLocalReports() {
-    final jsonStr = _prefs.getString(localReportsKey);
-    if (jsonStr != null && jsonStr.isNotEmpty) {
-      final List<dynamic> jsonList = json.decode(jsonStr);
-      // Filter out nulls and non-Map entries before deserialization
-      final validJsonList = jsonList.where((e) => e != null && e is Map<String, dynamic>).toList();
-      localReports.assignAll(validJsonList.map((e) => InspectionReportModel.fromJson(e)).toList());
-      print('[Load] Loaded local reports from storage. Count:  [32m${localReports.length} [0m');
-      if (jsonList.length != validJsonList.length) {
-        print('[WARNING] Skipped ${jsonList.length - validJsonList.length} invalid or null report entries during load.');
+    try {
+      final jsonStr = _prefs.getString(localReportsKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List<dynamic> jsonList = json.decode(jsonStr);
+        // Filter out nulls and non-Map entries before deserialization
+        final validJsonList = jsonList.where((e) => e != null && e is Map<String, dynamic>).toList();
+        
+        // Safely deserialize each report
+        final List<InspectionReportModel> reports = [];
+        for (final jsonItem in validJsonList) {
+          try {
+            final report = InspectionReportModel.fromJson(jsonItem as Map<String, dynamic>);
+            reports.add(report);
+          } catch (e) {
+            print('[Load] Failed to deserialize report: $e');
+            print('[Load] Problematic JSON: $jsonItem');
+          }
+        }
+        
+        localReports.assignAll(reports);
+        print('[Load] Loaded local reports from storage. Count: ${localReports.length}');
+        if (jsonList.length != reports.length) {
+          print('[WARNING] Skipped ${jsonList.length - reports.length} invalid or corrupted report entries during load.');
+        }
+      } else {
+        print('[Load] No local reports found in storage.');
       }
-    } else {
-      print('[Load] No local reports found in storage.');
+    } catch (e) {
+      print('[Load] Error loading local reports: $e');
+      // Clear corrupted data
+      _prefs.remove(localReportsKey);
+      localReports.clear();
     }
   }
 
