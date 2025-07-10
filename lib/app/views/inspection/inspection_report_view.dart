@@ -90,37 +90,86 @@ class InspectionReportView extends StatelessWidget {
                 itemCount: allReports.length,
                 itemBuilder: (context, idx) {
                   final report = allReports[idx];
-                  String tag;
+                  // Get the total questions from the questionnaire controller
+                  final questionnaireController = Get.find<QuestionnaireController>();
+                  final totalQuestions = questionnaireController.totalQuestions;
+                  
+                  final completionTag = report.completionTag(totalQuestions: totalQuestions);
+                  final completionStats = report.completionStats(totalQuestions: totalQuestions);
+                  
                   Color tagColor;
-
-                  if (report.status == InspectionReportStatus.uploaded) {
-                    tag = 'Synced';
-                    tagColor = Colors.blue;
-                  } else if (report.images.isNotEmpty && report.questionnaireResponses.isNotEmpty) {
-                    tag = 'Completed';
-                    tagColor = Colors.orange;
-                  } else {
-                    tag = 'In Progress';
-                    tagColor = Colors.red;
+                  switch (report.completionTagColor(totalQuestions: totalQuestions)) {
+                    case 'blue':
+                      tagColor = Colors.blue;
+                      break;
+                    case 'orange':
+                      tagColor = Colors.orange;
+                      break;
+                    case 'red':
+                    default:
+                      tagColor = Colors.red;
+                      break;
                   }
 
                   return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    elevation: 2,
                     child: ListTile(
-                      title: Text('Report ${report.id}'),
-                      subtitle: Text('Updated: ${report.updatedAt}'),
+                      title: Text(
+                        'Report ${report.id.split('_').last}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Updated: ${_formatDate(report.updatedAt)}'),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                'Progress: ${completionStats['completion_percentage']}% ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                              Text(
+                                '(${completionStats['answered_questions']}/${completionStats['total_questions']} questions)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurface.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (completionStats['primary_risk_photos'] > 0)
+                            Text(
+                              'Primary Risk Photos: ${completionStats['primary_risk_photos']}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                        ],
+                      ),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: tagColor,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          tag,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          completionTag,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       onTap: () {
-                        if (tag == 'In Progress' || tag == 'Completed') {
+                        if (completionTag == 'In Progress' || completionTag == 'Completed') {
                           reportsController.resumeReport(report.id);
                           Get.toNamed(AppRoutes.inspection_photos);
                         }
@@ -393,5 +442,9 @@ class InspectionReportView extends StatelessWidget {
         icon: const Icon(Icons.error, color: Colors.white),
       );
     }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

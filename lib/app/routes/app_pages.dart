@@ -4,6 +4,7 @@ import 'package:safe_harbor_field_app/app/views/home/home_view.dart';
 import 'package:safe_harbor_field_app/app/views/inspection/inspection_photos_view.dart';
 import 'package:safe_harbor_field_app/app/views/inspection/inspection_questionaire_view.dart';
 import 'package:safe_harbor_field_app/app/views/inspection/inspection_report_view.dart';
+import 'package:safe_harbor_field_app/app/views/inspection/inspection_report_finalize_view.dart';
 import 'package:safe_harbor_field_app/app/views/splash/splash_view.dart';
 import 'app_routes.dart';
 
@@ -33,9 +34,13 @@ class AppPages {
       name: AppRoutes.inspection_questionaire,
       page: () => InspectionQuestionnaireView(),
     ),
-     GetPage(
+    GetPage(
       name: AppRoutes.inspection_report,
       page: () => InspectionReportView(),
+    ),
+    GetPage(
+      name: AppRoutes.inspection_report_finalize,
+      page: () => const InspectionReportFinalizeView(),
     ),
   ];
 }

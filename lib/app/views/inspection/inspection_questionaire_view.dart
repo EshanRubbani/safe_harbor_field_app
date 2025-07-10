@@ -208,7 +208,7 @@ class InspectionQuestionnaireView extends StatelessWidget {
                     child: controller.isFormValid.value
                         ? FloatingActionButton.extended(
                             onPressed: () {
-                              Get.toNamed(AppRoutes.inspection_report);
+                              Get.toNamed(AppRoutes.inspection_report_finalize);
                             },
                             icon: const Icon(Icons.check_circle_outline_rounded),
                             label: const Text('Submit Questionnaire'),

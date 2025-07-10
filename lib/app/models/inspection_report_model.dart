@@ -92,4 +92,73 @@ class InspectionReportModel {
   // For local storage as string
   String toRawJson() => json.encode(toJson());
   factory InspectionReportModel.fromRawJson(String str) => InspectionReportModel.fromJson(json.decode(str));
-} 
+
+  /// Check if the report has at least one primary risk photo
+  bool get hasPrimaryRiskPhoto {
+    final primaryRiskPhotos = images['primary_risk'] ?? [];
+    return primaryRiskPhotos.isNotEmpty;
+  }
+
+  /// Check if all questionnaire responses are recorded
+  /// This method will check against the actual number of questions loaded
+  bool hasAllQuestionnaireResponses({int? totalQuestions}) {
+    final requiredQuestions = totalQuestions ?? 94; // Default to 94 if not provided
+    final answeredQuestions = questionnaireResponses.entries
+        .where((entry) => entry.value != null && entry.value.toString().trim().isNotEmpty)
+        .length;
+    return answeredQuestions >= requiredQuestions;
+  }
+
+  /// Check if the report is considered "completed" (ready for upload)
+  /// A report is completed when it has:
+  /// 1. At least 1 primary risk photo
+  /// 2. All questionnaire responses
+  bool isCompleted({int? totalQuestions}) {
+    return hasPrimaryRiskPhoto && hasAllQuestionnaireResponses(totalQuestions: totalQuestions);
+  }
+
+  /// Get the current completion status tag
+  String completionTag({int? totalQuestions}) {
+    if (status == InspectionReportStatus.uploaded) {
+      return 'Synced';
+    } else if (isCompleted(totalQuestions: totalQuestions)) {
+      return 'Completed';
+    } else {
+      return 'In Progress';
+    }
+  }
+
+  /// Get the color for the completion tag
+  /// This is used in the UI to display the appropriate color
+  String completionTagColor({int? totalQuestions}) {
+    switch (completionTag(totalQuestions: totalQuestions)) {
+      case 'Synced':
+        return 'blue';
+      case 'Completed':
+        return 'orange';
+      case 'In Progress':
+      default:
+        return 'red';
+    }
+  }
+
+  /// Get completion statistics
+  Map<String, dynamic> completionStats({int? totalQuestions}) {
+    final requiredQuestions = totalQuestions ?? 94;
+    final answeredQuestions = questionnaireResponses.entries
+        .where((entry) => entry.value != null && entry.value.toString().trim().isNotEmpty)
+        .length;
+    final totalImages = images.values.fold(0, (sum, photos) => sum + photos.length);
+    final primaryRiskPhotos = images['primary_risk']?.length ?? 0;
+    
+    return {
+      'answered_questions': answeredQuestions,
+      'total_questions': requiredQuestions,
+      'completion_percentage': requiredQuestions > 0 ? ((answeredQuestions / requiredQuestions) * 100).round() : 0,
+      'primary_risk_photos': primaryRiskPhotos,
+      'total_images': totalImages,
+      'is_completed': isCompleted(totalQuestions: totalQuestions),
+      'completion_tag': completionTag(totalQuestions: totalQuestions),
+    };
+  }
+}

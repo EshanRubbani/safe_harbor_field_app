@@ -627,4 +627,17 @@ class QuestionnaireController extends GetxController {
 
   // Check if form is ready for submission
   bool get isReadyForSubmission => isFormValid.value && !isSubmitting.value;
+
+  // Get total number of questions
+  int get totalQuestions => questions.length;
+
+  // Get number of answered questions
+  int get answeredQuestions {
+    return formData.entries
+        .where((entry) => entry.value != null && entry.value.toString().trim().isNotEmpty)
+        .length;
+  }
+
+  // Check if all questions are answered
+  bool get isAllQuestionsAnswered => answeredQuestions >= totalQuestions;
 }

@@ -102,6 +102,18 @@ class InspectionReportsController extends GetxController {
     report.questionnaireResponses = formData;
     report.images = imagesMap;
     report.updatedAt = DateTime.now();
+    
+    // Auto-assess completion status based on photos and questionnaire
+    if (report.status != InspectionReportStatus.uploaded) {
+      final totalQuestions = questionnaireController.totalQuestions;
+      if (report.isCompleted(totalQuestions: totalQuestions)) {
+        report.status = InspectionReportStatus.completed;
+        print('[Save] Report marked as completed: ${report.id}');
+      } else {
+        report.status = InspectionReportStatus.inProgress;
+      }
+    }
+    
     final idx = localReports.indexWhere((r) => r.id == report.id);
     if (idx >= 0) {
       localReports[idx] = report;
@@ -166,16 +178,34 @@ class InspectionReportsController extends GetxController {
     }
   }
 
-  /// Complete and upload the current report.
-  /// - Marks as completed, saves, uploads to Firestore.
-  /// - If upload succeeds, marks as uploaded and saves again.
-  /// - Completed reports cannot be resumed or viewed.
+  /// Assess and update the current report status based on completion checks.
+  void assessReportCompletion(String reportId) {
+    final report = localReports.firstWhereOrNull((r) => r.id == reportId);
+    if (report == null) return;
+    final totalQuestions = questionnaireController.totalQuestions;
+    if (report.isCompleted(totalQuestions: totalQuestions)) {
+      report.status = InspectionReportStatus.completed;
+    } else {
+      report.status = InspectionReportStatus.inProgress;
+    }
+    saveCurrentReportProgress();
+  }
+
+  /// Complete and upload the current report if it is fully completed.
+  /// - Marks as uploaded and saves again if successful.
   Future<void> completeAndUploadCurrentReport() async {
     if (currentReport.value == null) {
       print('[Complete/Upload] No current report to complete/upload.');
       return;
     }
     final report = currentReport.value!;
+
+    final totalQuestions = questionnaireController.totalQuestions;
+    if (!report.isCompleted(totalQuestions: totalQuestions)) {
+      print('[Complete/Upload] Report is not completed: ${report.id}');
+      return;
+    }
+
     report.status = InspectionReportStatus.completed;
     report.updatedAt = DateTime.now();
     saveCurrentReportProgress();
