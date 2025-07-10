@@ -64,14 +64,6 @@ class InspectionReportView extends StatelessWidget {
               reportsController.fetchCloudReports();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Start New Report',
-            onPressed: () {
-              reportsController.startNewReport(userId);
-              Get.toNamed(AppRoutes.inspection_photos);
-            },
-          ),
         ],
       ),
       body: Obx(() {
@@ -89,62 +81,56 @@ class InspectionReportView extends StatelessWidget {
           return const Center(child: Text('No reports found.'));
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16.0),
-          itemCount: allReports.length,
-          itemBuilder: (context, idx) {
-            final report = allReports[idx];
-            final isCompleted = report.status == InspectionReportStatus.uploaded;
-            return Card(
-              child: ListTile(
-                title: Text('Report ${report.id}'),
-                subtitle: Text(isCompleted
-                    ? 'Completed: ${report.updatedAt}'
-                    : 'Started: ${report.createdAt}'),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isCompleted ? Colors.green : Colors.orange,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    isCompleted ? 'Completed' : 'In Progress',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                onTap: () {
-                  if (!isCompleted) {
-                    reportsController.resumeReport(report.id);
-                    Get.toNamed(AppRoutes.inspection_photos);
+        return Column(
+          children: [
+            _buildHeaderCard(colorScheme, theme),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: allReports.length,
+                itemBuilder: (context, idx) {
+                  final report = allReports[idx];
+                  String tag;
+                  Color tagColor;
+
+                  if (report.status == InspectionReportStatus.uploaded) {
+                    tag = 'Synced';
+                    tagColor = Colors.blue;
+                  } else if (report.images.isNotEmpty && report.questionnaireResponses.isNotEmpty) {
+                    tag = 'Completed';
+                    tagColor = Colors.orange;
+                  } else {
+                    tag = 'In Progress';
+                    tagColor = Colors.red;
                   }
-                },
-                onLongPress: () async {
-                  if (!isCompleted) {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Report'),
-                        content: const Text('Are you sure you want to delete this in-progress report? This cannot be undone.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
+
+                  return Card(
+                    child: ListTile(
+                      title: Text('Report ${report.id}'),
+                      subtitle: Text('Updated: ${report.updatedAt}'),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: tagColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          tag,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    );
-                    if (confirm == true) {
-                      reportsController.deleteInProgressReport(report.id);
-                    }
-                  }
+                      onTap: () {
+                        if (tag == 'In Progress' || tag == 'Completed') {
+                          reportsController.resumeReport(report.id);
+                          Get.toNamed(AppRoutes.inspection_photos);
+                        }
+                      },
+                    ),
+                  );
                 },
               ),
-            );
-          },
+            ),
+          ],
         );
       }),
     );
@@ -195,7 +181,7 @@ class InspectionReportView extends StatelessWidget {
                   ),
                 ),
                 child: Icon(
-                  Icons.done_all_rounded,
+                  Icons.assessment_rounded,
                   size: 52,
                   color: colorScheme.primary,
                 ),
@@ -205,7 +191,7 @@ class InspectionReportView extends StatelessWidget {
 
               // Headline
               Text(
-                "Finalize Inspection",
+                "Inspection Reports",
                 style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: colorScheme.onSurface,
@@ -223,7 +209,7 @@ class InspectionReportView extends StatelessWidget {
 
               // Description text
               Text(
-                "Save the completed inspection to your device. It will be uploaded automatically later.",
+                "View and manage your inspection reports. In Progress reports can be resumed, Completed reports are ready for review.",
                 style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurface.withOpacity(0.7),
                       height: 1.6,
