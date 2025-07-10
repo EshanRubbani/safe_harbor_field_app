@@ -17,7 +17,18 @@ class InspectionQuestionnaireView extends StatelessWidget {
     final QuestionnaireService service = Get.find<QuestionnaireService>();
     final QuestionnaireController controller = Get.find<QuestionnaireController>();
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) return;
+        
+        // Save before popping
+        await controller.saveOnNavigationBack();
+        
+        // Now pop the route
+        Navigator.of(context).pop();
+      },
+      child: Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -32,37 +43,43 @@ class InspectionQuestionnaireView extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Save status indicator
+              // Reactive save status indicator
               Obx(() {
-                final isSaving = Get.find<InspectionReportsController>().isSaving.value;
+                final hasUnsavedChanges = controller.hasUnsavedChanges;
+                final isSavingManually = controller.isSavingManually;
+                final reportsController = Get.find<InspectionReportsController>();
+                final isAutoSaving = reportsController.isSaving.value;
+                
                 return Padding(
                   padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: isSaving
-                            ? Row(
-                                key: const ValueKey('saving'),
-                                children: [
-                                  SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text('Saving...', style: TextStyle(color: colorScheme.primary)),
-                                ],
-                              )
-                            : Row(
-                                key: const ValueKey('saved'),
-                                children: [
-                                  Icon(Icons.check_circle, color: Colors.green, size: 20),
-                                  const SizedBox(width: 6),
-                                  Text('Saved', style: TextStyle(color: Colors.green)),
-                                ],
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            if (!isSavingManually && !isAutoSaving) {
+                              controller.saveFormDataManually();
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme).withOpacity(0.1),
+                              border: Border.all(
+                                color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme).withOpacity(0.3),
+                                width: 1,
                               ),
+                            ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: _buildSaveIndicatorContent(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -199,27 +216,121 @@ class InspectionQuestionnaireView extends StatelessWidget {
                             foregroundColor: Colors.white,
                           )
                         : const SizedBox.shrink(),
-                  ),
           ),
-
-  //     // App Bar with actions
-  //     appBar: AppBar(
-  //       title: const Text(''),
-  //       backgroundColor: Colors.transparent,
-  //       elevation: 0,
-  //       automaticallyImplyLeading: false,
-  //       actions: [
-  //               TextButton.icon(
-  //           onPressed: controller.saveDraft,
-  //           icon: Icon(Icons.save_rounded, color: colorScheme.primary),
-  //           label: Text('Save Draft',
-  //               style: TextStyle(color: colorScheme.primary)),
-  //         ),
-  // ],
-  //     ),
+        ),
+      ),
     );
   }
 
+  // Helper method to get save indicator color
+  Color _getSaveIndicatorColor(bool hasUnsavedChanges, bool isSavingManually, bool isAutoSaving, ColorScheme colorScheme) {
+    if (isSavingManually || isAutoSaving) {
+      return colorScheme.primary;
+    } else if (hasUnsavedChanges) {
+      return Colors.orange;
+    } else {
+      return Colors.green;
+    }
+  }
+
+  // Helper method to build save indicator content
+  Widget _buildSaveIndicatorContent(bool hasUnsavedChanges, bool isSavingManually, bool isAutoSaving, ColorScheme colorScheme) {
+    if (isSavingManually) {
+      return Row(
+        key: const ValueKey('saving_manually'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Saving...',
+            style: TextStyle(
+              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      );
+    } else if (isAutoSaving) {
+      return Row(
+        key: const ValueKey('auto_saving'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Auto Saving...',
+            style: TextStyle(
+              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      );
+    } else if (hasUnsavedChanges) {
+      return Row(
+        key: const ValueKey('unsaved'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.circle,
+            color: Colors.orange,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Tap to Save',
+            style: TextStyle(
+              color: Colors.orange,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Row(
+        key: const ValueKey('saved'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.check_circle,
+            color: Colors.green,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Saved',
+            style: TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      );
+    }
+  }
   Widget _buildHeaderCard(ColorScheme colorScheme, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.all(16.0),

@@ -213,8 +213,13 @@ class InspectionReportsController extends GetxController {
     final jsonStr = _prefs.getString(localReportsKey);
     if (jsonStr != null && jsonStr.isNotEmpty) {
       final List<dynamic> jsonList = json.decode(jsonStr);
-      localReports.assignAll(jsonList.map((e) => InspectionReportModel.fromJson(e)).toList());
-      print('[Load] Loaded local reports from storage. Count: ${localReports.length}');
+      // Filter out nulls and non-Map entries before deserialization
+      final validJsonList = jsonList.where((e) => e != null && e is Map<String, dynamic>).toList();
+      localReports.assignAll(validJsonList.map((e) => InspectionReportModel.fromJson(e)).toList());
+      print('[Load] Loaded local reports from storage. Count:  [32m${localReports.length} [0m');
+      if (jsonList.length != validJsonList.length) {
+        print('[WARNING] Skipped ${jsonList.length - validJsonList.length} invalid or null report entries during load.');
+      }
     } else {
       print('[Load] No local reports found in storage.');
     }

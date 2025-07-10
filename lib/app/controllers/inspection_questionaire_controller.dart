@@ -41,6 +41,8 @@ class QuestionnaireController extends GetxController {
 
   Timer? _autoSaveDebounce;
   bool _autoSavePaused = false;
+  final RxBool _hasUnsavedChanges = false.obs;
+  final RxBool _isSavingManually = false.obs;
 
   void pauseAutoSave() {
     _autoSavePaused = true;
@@ -50,24 +52,25 @@ class QuestionnaireController extends GetxController {
     _autoSavePaused = false;
   }
 
+  // Getter for unsaved changes
+  bool get hasUnsavedChanges => _hasUnsavedChanges.value;
+  RxBool get hasUnsavedChangesObs => _hasUnsavedChanges;
+  
+  // Getter for manual saving state
+  bool get isSavingManually => _isSavingManually.value;
+  RxBool get isSavingManuallyObs => _isSavingManually;
+
   @override
   void onInit() {
     super.onInit();
     _setupValidation();
     _initializeSectionStates();
     _bindSubmissionState();
-    // Auto-save on formData change
+    // Track changes without auto-saving
     ever(formData, (_) {
-      if (!isLoadingFromModel && !_autoSavePaused) {
-        _autoSaveDebounce?.cancel();
-        _autoSaveDebounce = Timer(const Duration(seconds: 2), () {
-          print('[Auto-Save] formData changed, saving report progress...');
-          try {
-            Get.find<InspectionReportsController>().saveCurrentReportProgress();
-          } catch (e) {
-            print('[Auto-Save] Error saving report progress from formData change: ' + e.toString());
-          }
-        });
+      if (!isLoadingFromModel) {
+        _hasUnsavedChanges.value = true;
+        print('[Change Tracking] formData changed, marking as unsaved');
       }
     });
   }
@@ -444,14 +447,117 @@ class QuestionnaireController extends GetxController {
     isFormValid.value = false;
     lastSubmittedReportId.value = '';
     submissionError.value = '';
+    _hasUnsavedChanges.value = false;
+    _isSavingManually.value = false;
   }
 
-  // Method to get form data for saving
+  // Method to get form data for saving with consistent structure
   Map<String, dynamic> getFormData() {
-    final data = Map<String, dynamic>.from(formData);
-    print('[DEBUG] getFormData returning: ' + data.toString());
-    if (data.isEmpty) print('[WARNING] getFormData: formData is empty!');
-    return data;
+    final Map<String, dynamic> structuredData = <String, dynamic>{};
+    
+    // Ensure consistent data structure for all question types
+    formData.forEach((questionId, value) {
+      if (questionId != null && value != null) {
+        final question = _questionnaireService.getQuestionById(questionId);
+        if (question != null) {
+          // Structure data based on question type for consistency
+          switch (question.type) {
+            case QuestionType.date:
+              // Ensure date is stored as ISO string
+              if (value is DateTime) {
+                structuredData[questionId] = value.toIso8601String();
+              } else if (value is String && value.isNotEmpty) {
+                try {
+                  final dateTime = DateTime.parse(value);
+                  structuredData[questionId] = dateTime.toIso8601String();
+                } catch (e) {
+                  structuredData[questionId] = value;
+                }
+              } else {
+                structuredData[questionId] = value;
+              }
+              break;
+            case QuestionType.number:
+              // Ensure numbers are stored as strings for consistency
+              if (value is num) {
+                structuredData[questionId] = value.toString();
+              } else {
+                structuredData[questionId] = value.toString();
+              }
+              break;
+            case QuestionType.yesNo:
+            case QuestionType.multipleChoice:
+            case QuestionType.dropdown:
+            case QuestionType.text:
+            case QuestionType.longText:
+            default:
+              // Store as string for consistency
+              structuredData[questionId] = value.toString();
+              break;
+          }
+        } else {
+          // If question not found, store as-is but convert to string
+          structuredData[questionId] = value.toString();
+        }
+      }
+    });
+    
+    print('[DEBUG] getFormData returning structured data: ' + structuredData.toString());
+    if (structuredData.isEmpty) print('[WARNING] getFormData: structured data is empty!');
+    return structuredData;
+  }
+
+  // Method to manually save form data
+  Future<void> saveFormDataManually() async {
+    if (_isSavingManually.value) return; // Prevent double saves
+    
+    _isSavingManually.value = true;
+    print('[Manual Save] Starting manual save...');
+    
+    try {
+      final reportsController = Get.find<InspectionReportsController>();
+      await Future.delayed(const Duration(milliseconds: 500)); // Small delay for UI feedback
+      reportsController.saveCurrentReportProgress();
+      _hasUnsavedChanges.value = false;
+      print('[Manual Save] Manual save completed successfully');
+      
+      Get.snackbar(
+        'Saved',
+        'Questionnaire responses saved successfully',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Get.theme.colorScheme.primary.withOpacity(0.8),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(8),
+      );
+    } catch (e) {
+      print('[Manual Save] Error during manual save: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to save questionnaire responses',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      _isSavingManually.value = false;
+    }
+  }
+
+  // Method to save on navigation back
+  Future<void> saveOnNavigationBack() async {
+    if (_hasUnsavedChanges.value) {
+      print('[Navigation Save] Saving before navigation back...');
+      try {
+        final reportsController = Get.find<InspectionReportsController>();
+        reportsController.saveCurrentReportProgress();
+        _hasUnsavedChanges.value = false;
+        print('[Navigation Save] Navigation save completed');
+      } catch (e) {
+        print('[Navigation Save] Error during navigation save: $e');
+      }
+    }
   }
 
   // Method to load form data (from saved draft)
@@ -462,8 +568,29 @@ class QuestionnaireController extends GetxController {
     }
     isLoadingFromModel = true;
     print('[DEBUG] loadFormData called with: ' + data.toString());
-    formData.assignAll(data);
+    
+    // Clear existing form data first
+    formData.clear();
+    
+    // Load the saved data with proper structure validation
+    final Map<String, dynamic> validatedData = <String, dynamic>{};
+    
+    // Ensure all loaded data is properly typed and validated
+    data.forEach((key, value) {
+      if (key != null && value != null) {
+        // Handle different data types appropriately
+        if (value is String || value is num || value is bool) {
+          validatedData[key] = value;
+        } else {
+          // Convert complex types to string representation
+          validatedData[key] = value.toString();
+        }
+      }
+    });
+    
+    formData.assignAll(validatedData);
     validateForm();
+    _hasUnsavedChanges.value = false; // Mark as saved after loading
     print('[DEBUG] formData after assignAll: ' + formData.toString());
     isLoadingFromModel = false;
   }
