@@ -23,72 +23,7 @@ class InspectionReportView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      // appBar: AppBar(
-      //   backgroundColor: Colors.white,
-      //   elevation: 0.5,
-      //   title: Row(
-      //     children: [
-      //       Container(
-      //         padding: const EdgeInsets.all(8),
-      //         decoration: BoxDecoration(
-      //           color: const Color(0xFF4285F4).withOpacity(0.1),
-      //           borderRadius: BorderRadius.circular(8),
-      //         ),
-      //         child: const Icon(
-      //           Icons.task_alt_rounded,
-      //           color: Color(0xFF4285F4),
-      //           size: 20,
-      //         ),
-      //       ),
-      //       const SizedBox(width: 12),
-      //       const Text(
-      //         'Completed Inspections',
-      //         style: TextStyle(
-      //           fontSize: 18,
-      //           fontWeight: FontWeight.w600,
-      //           color: Color(0xFF1F2937),
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      //   actions: [
-      //     Obx(() {
-      //       final isLoading = reportsController.isLoadingCloudReports.value;
-      //       return Container(
-      //         margin: const EdgeInsets.only(right: 16),
-      //         child: ElevatedButton.icon(
-      //           onPressed: isLoading ? null : () {
-      //             reportsController.loadLocalReports();
-      //             reportsController.fetchCloudReports();
-      //           },
-      //           icon: isLoading 
-      //               ? SizedBox(
-      //                   width: 16,
-      //                   height: 16,
-      //                   child: CircularProgressIndicator(
-      //                     strokeWidth: 2,
-      //                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-      //                   ),
-      //                 )
-      //               : const Icon(Icons.sync_rounded, size: 16),
-      //           label: Text(
-      //             isLoading ? 'Syncing...' : 'Sync',
-      //             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-      //           ),
-      //           style: ElevatedButton.styleFrom(
-      //             backgroundColor: const Color(0xFF4285F4),
-      //             foregroundColor: Colors.white,
-      //             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      //             shape: RoundedRectangleBorder(
-      //               borderRadius: BorderRadius.circular(8),
-      //             ),
-      //             elevation: 0,
-      //           ),
-      //         ),
-      //       );
-      //     }),
-      //   ],
-      // ),
+
        appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

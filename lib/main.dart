@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_photos_controller.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
+import 'package:safe_harbor_field_app/app/controllers/pdf_template_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/controllers/auth_controller.dart';
 import 'app/themes/app_theme.dart';
@@ -31,12 +32,14 @@ void main() async {
   Get.put(QuestionnaireController(), permanent: true);
   Get.put(InspectionReportsController(), permanent: true);
   Get.put(QuestionnaireService(), permanent: true);
+  Get.put(InspectionPDFController(), permanent: true);
   
   // Initialize AuthController last to prevent premature navigation
   Get.put(AuthController(), permanent: true);
 
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
