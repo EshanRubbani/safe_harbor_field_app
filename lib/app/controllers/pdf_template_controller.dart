@@ -4,7 +4,7 @@
   import 'package:get/get.dart';
   import 'package:image_picker/image_picker.dart';
   import 'package:path_provider/path_provider.dart';
-  import 'package:safe_harbor_field_app/app/utils/pdf_template.dart';
+  import 'package:safe_harbor_field_app/app/utils/pdf_template_optimized.dart';
   import 'package:share_plus/share_plus.dart';
   import 'package:open_file/open_file.dart';
 
@@ -351,6 +351,7 @@
     // PDF Generation Method
     Future<void> generatePDF() async {
       try {
+        print('📝 [PDF] Starting PDF generation...');
         isGenerating.value = true;
 
         // Create model objects
@@ -455,8 +456,8 @@
           debrisInYard: debrisInYard.value == 'Yes',
         );
 
-        // Generate PDF
-        final pdfBytes = await InspectionPDFTemplate.generateInspectionReport(
+        print('🖨️ [PDF] Generating PDF bytes...');
+        final pdfBytes = await OptimizedInspectionPDFTemplate.generateInspectionReport(
           clientName: clientName.value,
           address: address.value,
           state: state.value,
@@ -484,45 +485,45 @@
           summary: summary.value,
         );
 
-        // Save PDF to downloads directory
-        Directory? downloadsDirectory;
+        print('📁 [PDF] Determining save location...');
+        Directory? saveDir;
+        String? savePath;
         try {
-          // Try to get downloads directory
           if (Platform.isAndroid) {
-            downloadsDirectory = Directory('/storage/emulated/0/Download');
-            if (!await downloadsDirectory!.exists()) {
-              downloadsDirectory = await getExternalStorageDirectory();
+            saveDir = Directory('/storage/emulated/0/Download');
+            if (!await saveDir.exists()) {
+              print('⚠️ [PDF] Download dir not found, using external storage dir.');
+              saveDir = await getExternalStorageDirectory();
             }
           } else if (Platform.isIOS) {
-            downloadsDirectory = await getApplicationDocumentsDirectory();
+            saveDir = await getApplicationDocumentsDirectory();
           } else {
-            downloadsDirectory = await getApplicationDocumentsDirectory();
+            saveDir = await getApplicationDocumentsDirectory();
           }
-          
-          if (downloadsDirectory == null) {
-            downloadsDirectory = await getApplicationDocumentsDirectory();
+          if (saveDir == null) {
+            print('⚠️ [PDF] Save dir is null, using app documents dir.');
+            saveDir = await getApplicationDocumentsDirectory();
           }
-          
-          // Create filename with timestamp
           final timestamp = DateTime.now().millisecondsSinceEpoch;
           final filename = 'inspection_report_$timestamp.pdf';
-          final file = File('${downloadsDirectory.path}/$filename');
-          
+          savePath = '${saveDir.path}/$filename';
+          print('📁 [PDF] Saving to: $savePath');
+          final file = File(savePath);
           await file.writeAsBytes(pdfBytes);
           pdfPath.value = file.path;
-          
+          print('✅ [PDF] PDF saved successfully at $savePath');
           Get.snackbar(
             'Success',
             'PDF saved to downloads successfully',
             snackPosition: SnackPosition.BOTTOM,
           );
         } catch (e) {
-          // Fallback to application documents directory
+          print('❌ [PDF] Error saving PDF: $e');
           final directory = await getApplicationDocumentsDirectory();
           final file = File('${directory.path}/inspection_report_${DateTime.now().millisecondsSinceEpoch}.pdf');
           await file.writeAsBytes(pdfBytes);
           pdfPath.value = file.path;
-          
+          print('✅ [PDF] PDF saved to fallback app directory: ${file.path}');
           Get.snackbar(
             'Success',
             'PDF generated successfully (saved to app directory)',
@@ -530,6 +531,7 @@
           );
         }
       } catch (e) {
+        print('❌ [PDF] Error generating PDF: $e');
         Get.snackbar(
           'Error',
           'Failed to generate PDF: ${e.toString()}',
@@ -543,6 +545,7 @@
     // Open PDF Method
     Future<void> openPDF() async {
       if (pdfPath.value.isEmpty) {
+        print('❌ [PDF] No PDF to open. Please generate PDF first.');
         Get.snackbar('Error', 'No PDF to open. Please generate PDF first.');
         return;
       }
@@ -550,15 +553,16 @@
       try {
         final file = File(pdfPath.value);
         if (!await file.exists()) {
+          print('❌ [PDF] PDF file not found at ${pdfPath.value}');
           Get.snackbar('Error', 'PDF file not found. Please generate PDF first.');
           return;
         }
 
-        // Try to open the PDF automatically
+        print('🚀 [PDF] Attempting to open PDF at ${pdfPath.value}...');
         final result = await OpenFile.open(pdfPath.value);
-        
+        print('📦 [PDF] OpenFile result: type=${result.type}, message=${result.message}');
         if (result.type == ResultType.done) {
-          // PDF opened successfully
+          print('✅ [PDF] PDF opened successfully!');
           Get.snackbar(
             'PDF Opened',
             'PDF opened successfully in your default PDF viewer',
@@ -568,7 +572,7 @@
             duration: const Duration(seconds: 2),
           );
         } else {
-          // Could not open automatically, show share option
+          print('❌ [PDF] Could not open PDF automatically. Showing share option.');
           Get.snackbar(
             'PDF Ready',
             'PDF saved to downloads. Tap to share or open with another app.',
@@ -581,6 +585,7 @@
                 try {
                   await Share.shareXFiles([XFile(pdfPath.value)], text: 'Inspection Report PDF');
                 } catch (e) {
+                  print('❌ [PDF] Failed to share PDF: $e');
                   Get.snackbar('Error', 'Failed to share PDF: ${e.toString()}');
                 }
               },
@@ -589,11 +594,12 @@
           );
         }
       } catch (e) {
-        print('[PDFController] Error opening PDF: $e');
+        print('❌ [PDF] Error opening PDF: $e');
         // Fallback to sharing
         try {
           await Share.shareXFiles([XFile(pdfPath.value)], text: 'Inspection Report PDF');
         } catch (shareError) {
+          print('❌ [PDF] Failed to open or share PDF: $shareError');
           Get.snackbar('Error', 'Failed to open or share PDF: ${e.toString()}');
         }
       }

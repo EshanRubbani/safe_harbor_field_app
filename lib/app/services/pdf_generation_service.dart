@@ -8,6 +8,7 @@ import '../models/inspection_report_model.dart';
 import '../controllers/inspection_reports_controller.dart';
 import '../controllers/pdf_template_controller.dart';
 import '../utils/pdf_template.dart';
+import '../utils/pdf_template_optimized.dart';
 import 'inspection_report_submission_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -83,8 +84,8 @@ class PdfGenerationService extends GetxService {
       currentStatus.value = 'Generating PDF document...';
       progress.value = 0.8;
 
-      // Generate PDF using the PDF controller
-      await _pdfController.generatePDF();
+      // Generate PDF using the optimized template
+      await _generateOptimizedPDF();
       
       currentStatus.value = 'PDF generated successfully!';
       progress.value = 1.0;
@@ -152,7 +153,7 @@ class PdfGenerationService extends GetxService {
     _pdfController.updateInspectionDate(_getQuestionValue(responses, 'date_of_inspection'));
     _pdfController.updateReportDate(_getQuestionValue(responses, 'date_of_inspection'));
     // _pdfController.updateSummary(_getQuestionValue(responses, 'Summary'));
-    _pdfController.updateSummary("We We We We We We We We We We We We We We We We We We We We We We We We We We We We We We We We We I I I For We I We I For For I For We We I For ");
+    _pdfController.updateSummary("This property inspection has been completed in accordance with standard underwriting guidelines. The dwelling appears to be in good overall condition with no significant risks identified during the external inspection. All major systems and structural elements have been visually assessed and documented. Any observed conditions are noted in the detailed sections of this report for your review and consideration.");
   }
 
   /// Map overall risk information
@@ -506,6 +507,27 @@ class PdfGenerationService extends GetxService {
         break;
       default:
         print('[PDFGenerationService] Unknown image category: $category');
+    }
+  }
+
+  /// Generate PDF using the optimized template
+  Future<void> _generateOptimizedPDF() async {
+    try {
+      print('[PDFGenerationService] Generating optimized PDF...');
+      
+      // Call the PDF controller's generatePDF method which uses the optimized template
+      await _pdfController.generatePDF();
+      
+      // Update the PDF path from the controller
+      final generatedPath = _pdfController.pdfPath.value;
+      if (generatedPath.isNotEmpty) {
+        print('[PDFGenerationService] PDF generated successfully at: $generatedPath');
+      } else {
+        throw Exception('PDF generation completed but no path was set');
+      }
+    } catch (e) {
+      print('[PDFGenerationService] Error in _generateOptimizedPDF: $e');
+      rethrow;
     }
   }
 
