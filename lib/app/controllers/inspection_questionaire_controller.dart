@@ -271,6 +271,7 @@ class QuestionnaireController extends GetxController {
       final reportId = await _inspectionReportService.submitInspectionReport(
         questionnaireData: submissionData,
         imageUrlsByCategory: _getDummyImageUrls(), // Will be replaced with actual image URLs later
+        Summary: 'Summary',
       );
 
       if (reportId != null) {

@@ -14,6 +14,8 @@ import 'app/routes/app_routes.dart';
 import 'firebase_options.dart';
 import 'app/controllers/inspection_reports_controller.dart';
 import 'app/services/questionaire_service.dart';
+import 'app/services/inspection_report_submission_service.dart';
+import 'app/services/pdf_generation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +34,9 @@ void main() async {
   Get.put(QuestionnaireController(), permanent: true);
   Get.put(InspectionReportsController(), permanent: true);
   Get.put(QuestionnaireService(), permanent: true);
+  Get.put(InspectionReportService(), permanent: true);
   Get.put(InspectionPDFController(), permanent: true);
+  Get.put(PdfGenerationService(), permanent: true);
   
   // Initialize AuthController last to prevent premature navigation
   Get.put(AuthController(), permanent: true);

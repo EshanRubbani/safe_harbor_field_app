@@ -23,6 +23,7 @@ class InspectionReportService extends GetxService {
   Future<String?> submitInspectionReport({
     required Map<String, dynamic> questionnaireData,
     Map<String, List<String>>? imageUrlsByCategory,
+    required String Summary,
   }) async {
     try {
       _isSubmitting.value = true;
@@ -41,7 +42,8 @@ class InspectionReportService extends GetxService {
       // Create report data structure
       final reportData = _createReportData(
         questionnaireData: questionnaireData,
-        imageUrlsByCategory: imageUrlsByCategory ?? _generateDummyImageUrls(),
+        imageUrlsByCategory: imageUrlsByCategory ?? {},
+        Summary: Summary,
       );
 
       // Submit to Firestore
@@ -77,6 +79,7 @@ class InspectionReportService extends GetxService {
   Map<String, dynamic> _createReportData({
     required Map<String, dynamic> questionnaireData,
     required Map<String, List<String>> imageUrlsByCategory,
+    required String Summary,
   }) {
     return {
       // Basic metadata
@@ -94,170 +97,124 @@ class InspectionReportService extends GetxService {
       'images': imageUrlsByCategory,
 
       // Summary statistics
-      // 'summary': _generateSummary(questionnaireData, imageUrlsByCategory),
+      'summary': Summary,
     };
   }
 
-  // Extract inspector information from questionnaire data
-  Map<String, dynamic> _extractInspectorInfo(Map<String, dynamic> data) {
-    return {
-      'name': data['inspector_name'] ?? '',
-      'drone_number': data['drone_number'] ?? '',
-      'policy_number': data['policy_number'] ?? '',
-      'inspection_date': data['inspection_date'] ?? '',
-    };
-  }
+  // // Extract inspector information from questionnaire data
+  // Map<String, dynamic> _extractInspectorInfo(Map<String, dynamic> data) {
+  //   return {
+  //     'name': data['inspector_name'] ?? '',
+  //     'drone_number': data['drone_number'] ?? '',
+  //     'policy_number': data['policy_number'] ?? '',
+  //     'inspection_date': data['inspection_date'] ?? '',
+  //   };
+  // }
 
-  // Extract insured information from questionnaire data
-  Map<String, dynamic> _extractInsuredInfo(Map<String, dynamic> data) {
-    return {
-      'name': data['insured_name'] ?? '',
-      'street_address': data['insured_address'] ?? '',
-      'state': data['insured_state'] ?? '',
-      'zip_code': data['insured_zip'] ?? '',
-    };
-  }
+  // // Extract insured information from questionnaire data
+  // Map<String, dynamic> _extractInsuredInfo(Map<String, dynamic> data) {
+  //   return {
+  //     'name': data['insured_name'] ?? '',
+  //     'street_address': data['insured_address'] ?? '',
+  //     'state': data['insured_state'] ?? '',
+  //     'zip_code': data['insured_zip'] ?? '',
+  //   };
+  // }
 
-  // Extract property details from questionnaire data
-  Map<String, dynamic> _extractPropertyDetails(Map<String, dynamic> data) {
-    return {
-      'neighborhood': data['neighborhood'] ?? '',
-      'area_economy': data['area_economy'] ?? '',
-      'property_vacant': data['property_vacant'] ?? '',
-      'dwelling_type': data['dwelling_type'] ?? '',
-      'year_built': data['year_built'] ?? '',
-      'foundation_type': data['foundation_type'] ?? '',
-      'primary_construction': data['primary_construction'] ?? '',
-      'number_of_stories': data['number_of_stories'] ?? '',
-      'living_area_sf': data['living_area_sf'] ?? '',
-      'lot_size': data['lot_size'] ?? '',
-      'overall_condition': data['overall_elevation_condition'] ?? '',
-      'roof_condition': data['overall_roof_condition'] ?? '',
-    };
-  }
+  // // Extract property details from questionnaire data
+  // Map<String, dynamic> _extractPropertyDetails(Map<String, dynamic> data) {
+  //   return {
+  //     'neighborhood': data['neighborhood'] ?? '',
+  //     'area_economy': data['area_economy'] ?? '',
+  //     'property_vacant': data['property_vacant'] ?? '',
+  //     'dwelling_type': data['dwelling_type'] ?? '',
+  //     'year_built': data['year_built'] ?? '',
+  //     'foundation_type': data['foundation_type'] ?? '',
+  //     'primary_construction': data['primary_construction'] ?? '',
+  //     'number_of_stories': data['number_of_stories'] ?? '',
+  //     'living_area_sf': data['living_area_sf'] ?? '',
+  //     'lot_size': data['lot_size'] ?? '',
+  //     'overall_condition': data['overall_elevation_condition'] ?? '',
+  //     'roof_condition': data['overall_roof_condition'] ?? '',
+  //   };
+  // }
 
-  // Generate summary statistics
-  Map<String, dynamic> _generateSummary(
-    Map<String, dynamic> questionnaireData,
-    Map<String, List<String>> imageUrlsByCategory,
-  ) {
-    int totalQuestions = 94;
-    int answeredQuestions = questionnaireData.entries
-        .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
-        .length;
+  // // Generate summary statistics
+  // Map<String, dynamic> _generateSummary(
+  //   Map<String, dynamic> questionnaireData,
+  //   Map<String, List<String>> imageUrlsByCategory,
+  // ) {
+  //   int totalQuestions = 94;
+  //   int answeredQuestions = questionnaireData.entries
+  //       .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
+  //       .length;
     
-    int totalImages = imageUrlsByCategory.values
-        .fold(0, (sum, urls) => sum + urls.length);
+  //   int totalImages = imageUrlsByCategory.values
+  //       .fold(0, (sum, urls) => sum + urls.length);
     
-    // Count hazards and issues
-    int hazardCount = _countHazards(questionnaireData);
-    int issueCount = _countIssues(questionnaireData);
+  //   // Count hazards and issues
+  //   int hazardCount = _countHazards(questionnaireData);
+  //   int issueCount = _countIssues(questionnaireData);
     
-    return {
-      'total_questions': totalQuestions,
-      'answered_questions': answeredQuestions,
-      'completion_percentage': (answeredQuestions / totalQuestions * 100).round(),
-      'total_images': totalImages,
-      'hazard_count': hazardCount,
-      'issue_count': issueCount,
-      'categories_with_images': imageUrlsByCategory.keys.toList(),
-    };
-  }
+  //   return {
+  //     'total_questions': totalQuestions,
+  //     'answered_questions': answeredQuestions,
+  //     'completion_percentage': (answeredQuestions / totalQuestions * 100).round(),
+  //     'total_images': totalImages,
+  //     'hazard_count': hazardCount,
+  //     'issue_count': issueCount,
+  //     'categories_with_images': imageUrlsByCategory.keys.toList(),
+  //   };
+  // }
 
-  // Count identified hazards
-  int _countHazards(Map<String, dynamic> data) {
-    int count = 0;
-    final hazardFields = [
-      'boarded_doors_windows',
-      'overgrown_vegetation',
-      'abandoned_vehicles',
-      'missing_damaged_steps',
-      'missing_damage_railing',
-      'tree_branch',
-      'swimming_pool',
-      'trampoline',
-      'dog',
-    ];
+  // // Count identified hazards
+  // int _countHazards(Map<String, dynamic> data) {
+  //   int count = 0;
+  //   final hazardFields = [
+  //     'boarded_doors_windows',
+  //     'overgrown_vegetation',
+  //     'abandoned_vehicles',
+  //     'missing_damaged_steps',
+  //     'missing_damage_railing',
+  //     'tree_branch',
+  //     'swimming_pool',
+  //     'trampoline',
+  //     'dog',
+  //   ];
     
-    for (final field in hazardFields) {
-      if (data[field] == 'Yes') count++;
-    }
+  //   for (final field in hazardFields) {
+  //     if (data[field] == 'Yes') count++;
+  //   }
     
-    return count;
-  }
+  //   return count;
+  // }
 
-  // Count structural issues
-  int _countIssues(Map<String, dynamic> data) {
-    int count = 0;
-    final issueFields = [
-      'siding_damage',
-      'peeling_paint',
-      'mildew_moss',
-      'window_damage',
-      'foundation_cracks',
-      'wall_cracks',
-      'chimney_damage',
-      'water_damage',
-      'door_damage',
-      'missing_shingles_tiles',
-      'curling_shingles',
-      'broken_cracked_tiles',
-      'uneven_decking',
-    ];
+  // // Count structural issues
+  // int _countIssues(Map<String, dynamic> data) {
+  //   int count = 0;
+  //   final issueFields = [
+  //     'siding_damage',
+  //     'peeling_paint',
+  //     'mildew_moss',
+  //     'window_damage',
+  //     'foundation_cracks',
+  //     'wall_cracks',
+  //     'chimney_damage',
+  //     'water_damage',
+  //     'door_damage',
+  //     'missing_shingles_tiles',
+  //     'curling_shingles',
+  //     'broken_cracked_tiles',
+  //     'uneven_decking',
+  //   ];
     
-    for (final field in issueFields) {
-      if (data[field] == 'Yes') count++;
-    }
+  //   for (final field in issueFields) {
+  //     if (data[field] == 'Yes') count++;
+  //   }
     
-    return count;
-  }
+  //   return count;
+  // }
 
-  // Generate dummy image URLs for testing
-  Map<String, List<String>> _generateDummyImageUrls() {
-    return {
-      'exterior_front': [
-        'https://firebasestorage.googleapis.com/dummy/exterior_front_1.jpg',
-        'https://firebasestorage.googleapis.com/dummy/exterior_front_2.jpg',
-      ],
-      'exterior_back': [
-        'https://firebasestorage.googleapis.com/dummy/exterior_back_1.jpg',
-      ],
-      'exterior_left': [
-        'https://firebasestorage.googleapis.com/dummy/exterior_left_1.jpg',
-      ],
-      'exterior_right': [
-        'https://firebasestorage.googleapis.com/dummy/exterior_right_1.jpg',
-      ],
-      'roof_overview': [
-        'https://firebasestorage.googleapis.com/dummy/roof_overview_1.jpg',
-        'https://firebasestorage.googleapis.com/dummy/roof_overview_2.jpg',
-        'https://firebasestorage.googleapis.com/dummy/roof_overview_3.jpg',
-      ],
-      'roof_details': [
-        'https://firebasestorage.googleapis.com/dummy/roof_details_1.jpg',
-        'https://firebasestorage.googleapis.com/dummy/roof_details_2.jpg',
-      ],
-      'hvac_systems': [
-        'https://firebasestorage.googleapis.com/dummy/hvac_1.jpg',
-      ],
-      'electrical_panel': [
-        'https://firebasestorage.googleapis.com/dummy/electrical_1.jpg',
-      ],
-      'foundation': [
-        'https://firebasestorage.googleapis.com/dummy/foundation_1.jpg',
-      ],
-      'garage_outbuilding': [
-        'https://firebasestorage.googleapis.com/dummy/garage_1.jpg',
-      ],
-      'hazards': [
-        'https://firebasestorage.googleapis.com/dummy/hazard_1.jpg',
-      ],
-      'damages': [
-        'https://firebasestorage.googleapis.com/dummy/damage_1.jpg',
-        'https://firebasestorage.googleapis.com/dummy/damage_2.jpg',
-      ],
-    };
-  }
 
   // Generate unique report ID
   String _generateReportId() {
@@ -302,65 +259,32 @@ class InspectionReportService extends GetxService {
     }
   }
 
-  // Update inspection report
-  Future<bool> updateInspectionReport(
-    String reportId,
-    Map<String, dynamic> updatedData,
-  ) async {
-    try {
-      await _firestore.collection(_collection).doc(reportId).update({
-        ...updatedData,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-      return true;
-    } catch (e) {
-      _error.value = 'Failed to update inspection report: ${e.toString()}';
-      return false;
-    }
-  }
+  // // Update inspection report
+  // Future<bool> updateInspectionReport(
+  //   String reportId,
+  //   Map<String, dynamic> updatedData,
+  // ) async {
+  //   try {
+  //     await _firestore.collection(_collection).doc(reportId).update({
+  //       ...updatedData,
+  //       'updated_at': FieldValue.serverTimestamp(),
+  //     });
+  //     return true;
+  //   } catch (e) {
+  //     _error.value = 'Failed to update inspection report: ${e.toString()}';
+  //     return false;
+  //   }
+  // }
 
-  // Delete inspection report
-  Future<bool> deleteInspectionReport(String reportId) async {
-    try {
-      await _firestore.collection(_collection).doc(reportId).delete();
-      return true;
-    } catch (e) {
-      _error.value = 'Failed to delete inspection report: ${e.toString()}';
-      return false;
-    }
-  }
+  // // Delete inspection report
+  // Future<bool> deleteInspectionReport(String reportId) async {
+  //   try {
+  //     await _firestore.collection(_collection).doc(reportId).delete();
+  //     return true;
+  //   } catch (e) {
+  //     _error.value = 'Failed to delete inspection report: ${e.toString()}';
+  //     return false;
+  //   }
+  // }
 
-  // Get reports summary/statistics
-  Future<Map<String, dynamic>> getReportsSummary() async {
-    try {
-      if (currentUserId == null) return {};
-      
-      final query = await _firestore
-          .collection(_collection)
-          .where('inspector_id', isEqualTo: currentUserId)
-          .get();
-
-      final reports = query.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-      
-      return {
-        'total_reports': reports.length,
-        'reports_this_month': reports.where((report) {
-          final createdAt = report['created_at'] as Timestamp?;
-          if (createdAt == null) return false;
-          final now = DateTime.now();
-          final reportDate = createdAt.toDate();
-          return reportDate.year == now.year && reportDate.month == now.month;
-        }).length,
-        'average_hazards': reports.isEmpty ? 0 : reports
-            .map((r) => (r['summary']?['hazard_count'] as int?) ?? 0)
-            .reduce((a, b) => a + b) / reports.length,
-        'average_issues': reports.isEmpty ? 0 : reports
-            .map((r) => (r['summary']?['issue_count'] as int?) ?? 0)
-            .reduce((a, b) => a + b) / reports.length,
-      };
-    } catch (e) {
-      _error.value = 'Failed to fetch reports summary: ${e.toString()}';
-      return {};
-    }
-  }
 }

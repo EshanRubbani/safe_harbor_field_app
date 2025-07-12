@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+
 // Top-Level CompleteReport Model
 class CompleteReport {
   final String createdAt;
@@ -22,16 +25,36 @@ class CompleteReport {
 
   factory CompleteReport.fromJson(Map<String, dynamic> json) {
     return CompleteReport(
-      createdAt: json['created_at'],
+      createdAt: _convertTimestampToString(json['created_at']),
       images: Images.fromJson(json['images']),
       inspectorId: json['inspector_id'],
       questionnaireResponse:
           QuestionnaireResponse.fromJson(json['questionnaire_responses']),
       reportId: json['report_id'],
       status: json['status'],
-      updatedAt: json['updated_at'],
+      updatedAt: _convertTimestampToString(json['updated_at']),
       version: json['version'],
     );
+  }
+
+  /// Helper method to convert Timestamp to String in MM-DD-YYYY hh:mm:ss format
+  static String _convertTimestampToString(dynamic timestamp) {
+    if (timestamp == null) return '';
+    
+    DateTime dateTime;
+    if (timestamp is Timestamp) {
+      dateTime = timestamp.toDate();
+    } else if (timestamp is DateTime) {
+      dateTime = timestamp;
+    } else if (timestamp is String) {
+      dateTime = DateTime.tryParse(timestamp) ?? DateTime.now();
+    } else {
+      dateTime = DateTime.now();
+    }
+    
+    // Format as MM-DD-YYYY hh:mm:ss
+    final DateFormat formatter = DateFormat('MM-dd-yyyy HH:mm:ss');
+    return formatter.format(dateTime);
   }
 
   Map<String, dynamic> toJson() {

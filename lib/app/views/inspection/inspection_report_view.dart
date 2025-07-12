@@ -5,6 +5,7 @@ import 'package:safe_harbor_field_app/app/controllers/inspection_reports_control
 import 'package:safe_harbor_field_app/app/models/inspection_report_model.dart';
 import 'package:safe_harbor_field_app/app/controllers/auth_controller.dart';
 import 'package:safe_harbor_field_app/app/routes/app_routes.dart';
+import 'package:safe_harbor_field_app/app/services/pdf_generation_service.dart';
 
 class InspectionReportView extends StatelessWidget {
   const InspectionReportView({super.key});
@@ -414,17 +415,69 @@ class InspectionReportView extends StatelessWidget {
   }) {
     if (completionTag == 'Synced') {
       return ElevatedButton.icon(
-        onPressed: () {
-          // View report action
-          Get.snackbar(
-            'View Report',
-            'Report viewing feature coming soon',
-            snackPosition: SnackPosition.TOP,
+        onPressed: () async {
+          // Generate PDF for the corresponding report
+          final pdfService = Get.find<PdfGenerationService>();
+          
+          // Show loading dialog
+          Get.dialog(
+            AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Obx(() => Text(
+                    pdfService.generationStatus.isEmpty 
+                        ? 'Generating PDF...' 
+                        : pdfService.generationStatus,
+                    style: const TextStyle(fontSize: 14),
+                    textAlign: TextAlign.center,
+                  )),
+                ],
+              ),
+            ),
+            barrierDismissible: false,
           );
+          
+          try {
+            final pdfPath = await pdfService.generatePdfFromReportId(report.id);
+            Get.back(); // Close loading dialog
+            
+            if (pdfPath != null) {
+              Get.snackbar(
+                'PDF Generated',
+                'PDF saved to downloads and opened automatically!',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            } else {
+              Get.snackbar(
+                'Error',
+                'Failed to generate PDF. Please try again.',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+              );
+            }
+          } catch (e) {
+            Get.back(); // Close loading dialog
+            Get.snackbar(
+              'Error',
+              'An error occurred while generating PDF: ${e.toString()}',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
         },
-        icon: const Icon(Icons.visibility_rounded, size: 16),
+        icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
         label: const Text(
-          'View Report',
+          'Generate PDF',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         style: ElevatedButton.styleFrom(

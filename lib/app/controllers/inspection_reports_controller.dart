@@ -248,6 +248,7 @@ class InspectionReportsController extends GetxController {
     final reportId = await reportService.submitInspectionReport(
       questionnaireData: report.questionnaireResponses,
       imageUrlsByCategory: report.images,
+      Summary: 'Summary',
     );
     if (reportId != null) {
       report.status = InspectionReportStatus.uploaded;
@@ -400,6 +401,7 @@ class InspectionReportsController extends GetxController {
       final firestoreReportId = await reportService.submitInspectionReport(
         questionnaireData: report.questionnaireResponses,
         imageUrlsByCategory: report.images,
+        Summary: 'Summary',
       );
 
       if (firestoreReportId != null) {

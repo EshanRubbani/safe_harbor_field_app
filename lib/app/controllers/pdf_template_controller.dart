@@ -1,11 +1,12 @@
   import 'dart:io';
   import 'dart:typed_data';
+  import 'package:flutter/material.dart';
   import 'package:get/get.dart';
   import 'package:image_picker/image_picker.dart';
   import 'package:path_provider/path_provider.dart';
   import 'package:safe_harbor_field_app/app/utils/pdf_template.dart';
   import 'package:share_plus/share_plus.dart';
-  import 'package:permission_handler/permission_handler.dart';
+  import 'package:open_file/open_file.dart';
 
   class InspectionPDFController extends GetxController {
     final RxBool isGenerating = false.obs;
@@ -483,18 +484,51 @@
           summary: summary.value,
         );
 
-        // Save PDF
-        final directory = await getApplicationDocumentsDirectory();
-        final file = File('${directory.path}/inspection_report_${DateTime.now().millisecondsSinceEpoch}.pdf');
-        await file.writeAsBytes(pdfBytes);
-        
-        pdfPath.value = file.path;
-        
-        Get.snackbar(
-          'Success',
-          'PDF generated successfully',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        // Save PDF to downloads directory
+        Directory? downloadsDirectory;
+        try {
+          // Try to get downloads directory
+          if (Platform.isAndroid) {
+            downloadsDirectory = Directory('/storage/emulated/0/Download');
+            if (!await downloadsDirectory!.exists()) {
+              downloadsDirectory = await getExternalStorageDirectory();
+            }
+          } else if (Platform.isIOS) {
+            downloadsDirectory = await getApplicationDocumentsDirectory();
+          } else {
+            downloadsDirectory = await getApplicationDocumentsDirectory();
+          }
+          
+          if (downloadsDirectory == null) {
+            downloadsDirectory = await getApplicationDocumentsDirectory();
+          }
+          
+          // Create filename with timestamp
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final filename = 'inspection_report_$timestamp.pdf';
+          final file = File('${downloadsDirectory.path}/$filename');
+          
+          await file.writeAsBytes(pdfBytes);
+          pdfPath.value = file.path;
+          
+          Get.snackbar(
+            'Success',
+            'PDF saved to downloads successfully',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        } catch (e) {
+          // Fallback to application documents directory
+          final directory = await getApplicationDocumentsDirectory();
+          final file = File('${directory.path}/inspection_report_${DateTime.now().millisecondsSinceEpoch}.pdf');
+          await file.writeAsBytes(pdfBytes);
+          pdfPath.value = file.path;
+          
+          Get.snackbar(
+            'Success',
+            'PDF generated successfully (saved to app directory)',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
       } catch (e) {
         Get.snackbar(
           'Error',
@@ -506,7 +540,66 @@
       }
     }
 
-    // Share PDF Method
+    // Open PDF Method
+    Future<void> openPDF() async {
+      if (pdfPath.value.isEmpty) {
+        Get.snackbar('Error', 'No PDF to open. Please generate PDF first.');
+        return;
+      }
+
+      try {
+        final file = File(pdfPath.value);
+        if (!await file.exists()) {
+          Get.snackbar('Error', 'PDF file not found. Please generate PDF first.');
+          return;
+        }
+
+        // Try to open the PDF automatically
+        final result = await OpenFile.open(pdfPath.value);
+        
+        if (result.type == ResultType.done) {
+          // PDF opened successfully
+          Get.snackbar(
+            'PDF Opened',
+            'PDF opened successfully in your default PDF viewer',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+        } else {
+          // Could not open automatically, show share option
+          Get.snackbar(
+            'PDF Ready',
+            'PDF saved to downloads. Tap to share or open with another app.',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+            mainButton: TextButton(
+              onPressed: () async {
+                try {
+                  await Share.shareXFiles([XFile(pdfPath.value)], text: 'Inspection Report PDF');
+                } catch (e) {
+                  Get.snackbar('Error', 'Failed to share PDF: ${e.toString()}');
+                }
+              },
+              child: const Text('Share', style: TextStyle(color: Colors.white)),
+            ),
+          );
+        }
+      } catch (e) {
+        print('[PDFController] Error opening PDF: $e');
+        // Fallback to sharing
+        try {
+          await Share.shareXFiles([XFile(pdfPath.value)], text: 'Inspection Report PDF');
+        } catch (shareError) {
+          Get.snackbar('Error', 'Failed to open or share PDF: ${e.toString()}');
+        }
+      }
+    }
+
+    // Share PDF Method (kept for backward compatibility)
     Future<void> sharePDF() async {
       if (pdfPath.value.isEmpty) {
         Get.snackbar('Error', 'No PDF to share. Please generate PDF first.');
