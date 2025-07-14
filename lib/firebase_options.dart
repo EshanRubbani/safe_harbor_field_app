@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyArtf3BI9Gc8jwG1EvoSwyNVxYszu5cmNc',
-    appId: '1:995246260968:android:6ac9c0c25889ac91413f5d',
+    appId: '1:995246260968:android:9a81c9347e38fa6d413f5d',
     messagingSenderId: '995246260968',
     projectId: 'safe-harbor-db2cd',
     storageBucket: 'safe-harbor-db2cd.firebasestorage.app',
@@ -65,10 +65,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA3JDgEK_qM5UKFr1rff1wMFNF3S-ilLzA',
-    appId: '1:995246260968:ios:9d7628d5c5a0597c413f5d',
+    appId: '1:995246260968:ios:367be41d70874022413f5d',
     messagingSenderId: '995246260968',
     projectId: 'safe-harbor-db2cd',
     storageBucket: 'safe-harbor-db2cd.firebasestorage.app',
-    iosBundleId: 'com.example.safeHarborFieldApp',
+    iosBundleId: 'com.safeharbor.app',
   );
+
 }

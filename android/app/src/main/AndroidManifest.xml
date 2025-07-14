@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Camera permission added for camera access -->
+
     <uses-permission android:name="android.permission.CAMERA" />
+
+
     <application
-        android:label="safe_harbor_field_app"
+        android:label="SafeHarbor"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
