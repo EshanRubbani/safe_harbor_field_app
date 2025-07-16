@@ -15,239 +15,260 @@ class InspectionQuestionnaireView extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     // Register the service before the controller
     final QuestionnaireService service = Get.find<QuestionnaireService>();
-    final QuestionnaireController controller = Get.find<QuestionnaireController>();
+    final QuestionnaireController controller =
+        Get.find<QuestionnaireController>();
 
     return PopScope(
       canPop: false,
       onPopInvoked: (bool didPop) async {
         if (didPop) return;
-        
+
         // Save before popping
         await controller.saveOnNavigationBack();
-        
+
         // Now pop the route
         Navigator.of(context).pop();
       },
       child: Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.background,
-              colorScheme.background.withOpacity(0.95),
-            ],
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.surface,
+                colorScheme.surface.withOpacity(0.95),
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Reactive save status indicator
-              Obx(() {
-                final hasUnsavedChanges = controller.hasUnsavedChanges;
-                final isSavingManually = controller.isSavingManually;
-                final reportsController = Get.find<InspectionReportsController>();
-                final isAutoSaving = reportsController.isSaving.value;
-                
-                return Padding(
-                  padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            if (!isSavingManually && !isAutoSaving) {
-                              controller.saveFormDataManually();
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme).withOpacity(0.1),
-                              border: Border.all(
-                                color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme).withOpacity(0.3),
-                                width: 1,
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Reactive save status indicator
+                Obx(() {
+                  final hasUnsavedChanges = controller.hasUnsavedChanges;
+                  final isSavingManually = controller.isSavingManually;
+                  final reportsController =
+                      Get.find<InspectionReportsController>();
+                  final isAutoSaving = reportsController.isSaving.value;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              if (!isSavingManually && !isAutoSaving) {
+                                controller.saveFormDataManually();
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: _getSaveIndicatorColor(
+                                        hasUnsavedChanges,
+                                        isSavingManually,
+                                        isAutoSaving,
+                                        colorScheme)
+                                    .withOpacity(0.1),
+                                border: Border.all(
+                                  color: _getSaveIndicatorColor(
+                                          hasUnsavedChanges,
+                                          isSavingManually,
+                                          isAutoSaving,
+                                          colorScheme)
+                                      .withOpacity(0.3),
+                                  width: 1,
+                                ),
                               ),
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              child: _buildSaveIndicatorContent(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: _buildSaveIndicatorContent(
+                                    hasUnsavedChanges,
+                                    isSavingManually,
+                                    isAutoSaving,
+                                    colorScheme),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-              // Header Card
-
-              // Loading State
-              Obx(() {
-                if (controller.isLoading) {
-                  return const Expanded(
-                    child: Center(
-                      child: CircularProgressIndicator(),
+                      ],
                     ),
                   );
-                }
+                }),
+                // Header Card
 
-                if (controller.error.isNotEmpty) {
-                  return Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Error loading questions',
-                            style: theme.textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            controller.error,
-                            style: theme.textTheme.bodyMedium?.copyWith(
+                // Loading State
+                Obx(() {
+                  if (controller.isLoading) {
+                    return const Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  if (controller.error.isNotEmpty) {
+                    return Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
                               color: colorScheme.error,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () => service.loadQuestions(),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Text(
+                              'Error loading questions',
+                              style: theme.textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              controller.error,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.error,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => service.loadQuestions(),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Form Content
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildHeaderCard(colorScheme, theme),
+
+                            const SizedBox(height: 20),
+
+                            // Dynamic Sections
+                            ...controller.sections.map(
+                              (section) => Obx(() => FormSectionWidget(
+                                    title: section.title,
+                                    icon: section.icon ?? Icons.quiz_outlined,
+                                    isExpanded: controller
+                                        .isSectionExpanded(section.id),
+                                    onToggle: () =>
+                                        controller.toggleSection(section.id),
+                                    children: section.questions
+                                        .asMap()
+                                        .entries
+                                        .map(
+                                          (entry) => Obx(() {
+                                            final question = entry.value;
+                                            final questionNumber =
+                                                entry.key + 1;
+                                            final hasError = controller
+                                                    .fieldErrors[question.id] ==
+                                                true;
+                                            // Pass the numbered label to the widget
+                                            return service
+                                                .getWidgetForDynamicQuestion(
+                                              question,
+                                              labelPrefix: '$questionNumber. ',
+                                              currentValue: controller
+                                                  .getFormValue(question.id)
+                                                  ?.toString(),
+                                              onChanged: (value) =>
+                                                  controller.updateFormData(
+                                                      question.id, value),
+                                              validator: (value) => controller
+                                                  .validateDynamicQuestion(
+                                                      question, value),
+                                              hasError:
+                                                  hasError, // Pass error state to widget
+                                              viewOnly:
+                                                  controller.viewOnly.value,
+                                            );
+                                          }),
+                                        )
+                                        .toList(),
+                                  )),
+                            ),
+
+                            const SizedBox(
+                                height: 100), // Space for floating button
+                          ],
+                        ),
                       ),
                     ),
                   );
-                }
+                }),
+              ],
+            ),
+          ),
+        ),
 
-              
-                // Form Content
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          _buildHeaderCard(colorScheme, theme),
+        // Floating Action Button with Progress
+        floatingActionButton: Obx(() {
+          if (controller.viewOnly.value) {
+            return const SizedBox.shrink();
+          }
 
-                          const SizedBox(height: 20),
+          final answeredQuestions = controller.answeredQuestions;
+          final totalQuestions = controller.totalQuestions;
+          final answeredRequired = controller.answeredRequiredQuestions;
+          final requiredQuestions = controller.requiredQuestions;
+          final isFormValid = controller.isFormValid.value;
 
-                          // Dynamic Sections
-                          ...controller.sections.map(
-                            (section) => Obx(() => FormSectionWidget(
-                                  title: section.title,
-                                  icon: section.icon ?? Icons.quiz_outlined,
-                                  isExpanded:
-                                      controller.isSectionExpanded(section.id),
-                                  onToggle: () =>
-                                      controller.toggleSection(section.id),
-                                  children: section.questions
-                                      .asMap()
-                                      .entries
-                                      .map(
-                                        (entry) => Obx(() {
-                                          final question = entry.value;
-                                          final questionNumber = entry.key + 1;
-                                          final hasError = controller
-                                                  .fieldErrors[question.id] ==
-                                              true;
-                                          // Pass the numbered label to the widget
-                                          return service.getWidgetForQuestion(
-                                            question,
-                                            labelPrefix: '$questionNumber. ',
-                                            currentValue: controller
-                                                .getFormValue(question.id)
-                                                ?.toString(),
-                                            onChanged: (value) =>
-                                                controller.updateFormData(
-                                                    question.id, value),
-                                            validator: (value) =>
-                                                controller.validateQuestion(
-                                                    question, value),
-                                            hasError: hasError, // Pass error state to widget
-                                            viewOnly: controller.viewOnly.value,
-                                          );
-                                        }),
-                                      )
-                                      .toList(),
-                                )),
-                          ),
-
-                          const SizedBox(
-                              height: 100), // Space for floating button
-                        ],
-                      ),
-                    ),
-                  ),
+          // Always show the button with progress information
+          return FloatingActionButton.extended(
+            onPressed: () async {
+              if (isFormValid) {
+                await controller.saveFormDataManually();
+                Get.toNamed(AppRoutes.inspection_report_finalize);
+              } else {
+                // Show progress information
+                Get.snackbar(
+                  'Form Incomplete',
+                  'Please answer all required questions.\nRequired: $answeredRequired/$requiredQuestions\nTotal: $answeredQuestions/$totalQuestions',
+                  snackPosition: SnackPosition.TOP,
+                  backgroundColor: Colors.orange,
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 4),
                 );
-              }),
-            ],
-          ),
-        ),
+              }
+            },
+            icon: Icon(
+              isFormValid
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.assignment_outlined,
+            ),
+            label: Text(
+              isFormValid
+                  ? 'Submit Questionnaire'
+                  : '$answeredQuestions/$totalQuestions Questions',
+            ),
+            backgroundColor: isFormValid ? colorScheme.primary : Colors.orange,
+            foregroundColor: Colors.white,
+          );
+        }),
       ),
-
-      // Floating Action Button with Progress
-      floatingActionButton: Obx(() {
-        if (controller.viewOnly.value) {
-          return const SizedBox.shrink();
-        }
-        
-        final answeredQuestions = controller.answeredQuestions;
-        final totalQuestions = controller.totalQuestions;
-        final answeredRequired = controller.answeredRequiredQuestions;
-        final requiredQuestions = controller.requiredQuestions;
-        final isFormValid = controller.isFormValid.value;
-        
-        // Always show the button with progress information
-        return FloatingActionButton.extended(
-          onPressed: () async {
-            if (isFormValid) {
-              await controller.saveFormDataManually();
-              Get.toNamed(AppRoutes.inspection_report_finalize);
-            } else {
-              // Show progress information
-              Get.snackbar(
-                'Form Incomplete',
-                'Please answer all required questions.\nRequired: $answeredRequired/$requiredQuestions\nTotal: $answeredQuestions/$totalQuestions',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.orange,
-                colorText: Colors.white,
-                duration: const Duration(seconds: 4),
-              );
-            }
-          },
-          icon: Icon(
-            isFormValid ? Icons.check_circle_outline_rounded : Icons.assignment_outlined,
-          ),
-          label: Text(
-            isFormValid 
-                ? 'Submit Questionnaire'
-                : '$answeredQuestions/$totalQuestions Questions',
-          ),
-          backgroundColor: isFormValid ? colorScheme.primary : Colors.orange,
-          foregroundColor: Colors.white,
-        );
-      }),
-        ),
-
-    
     );
   }
 
   // Helper method to get save indicator color
-  Color _getSaveIndicatorColor(bool hasUnsavedChanges, bool isSavingManually, bool isAutoSaving, ColorScheme colorScheme) {
+  Color _getSaveIndicatorColor(bool hasUnsavedChanges, bool isSavingManually,
+      bool isAutoSaving, ColorScheme colorScheme) {
     if (isSavingManually || isAutoSaving) {
       return colorScheme.primary;
     } else if (hasUnsavedChanges) {
@@ -258,7 +279,8 @@ class InspectionQuestionnaireView extends StatelessWidget {
   }
 
   // Helper method to build save indicator content
-  Widget _buildSaveIndicatorContent(bool hasUnsavedChanges, bool isSavingManually, bool isAutoSaving, ColorScheme colorScheme) {
+  Widget _buildSaveIndicatorContent(bool hasUnsavedChanges,
+      bool isSavingManually, bool isAutoSaving, ColorScheme colorScheme) {
     if (isSavingManually) {
       return Row(
         key: const ValueKey('saving_manually'),
@@ -270,7 +292,8 @@ class InspectionQuestionnaireView extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+                _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually,
+                    isAutoSaving, colorScheme),
               ),
             ),
           ),
@@ -278,7 +301,8 @@ class InspectionQuestionnaireView extends StatelessWidget {
           Text(
             'Saving...',
             style: TextStyle(
-              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually,
+                  isAutoSaving, colorScheme),
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -296,7 +320,8 @@ class InspectionQuestionnaireView extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+                _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually,
+                    isAutoSaving, colorScheme),
               ),
             ),
           ),
@@ -304,7 +329,8 @@ class InspectionQuestionnaireView extends StatelessWidget {
           Text(
             'Auto Saving...',
             style: TextStyle(
-              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually, isAutoSaving, colorScheme),
+              color: _getSaveIndicatorColor(hasUnsavedChanges, isSavingManually,
+                  isAutoSaving, colorScheme),
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -355,6 +381,7 @@ class InspectionQuestionnaireView extends StatelessWidget {
       );
     }
   }
+
   Widget _buildHeaderCard(ColorScheme colorScheme, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.all(16.0),

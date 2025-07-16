@@ -7,7 +7,6 @@ import '../models/complete_report_model.dart';
 import '../models/inspection_report_model.dart';
 import '../controllers/inspection_reports_controller.dart';
 import '../controllers/pdf_template_controller.dart';
-import '../utils/pdf_template.dart';
 import '../utils/pdf_template_optimized.dart';
 import 'inspection_report_submission_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,7 +16,7 @@ class PdfGenerationService extends GetxService {
   late InspectionReportsController _reportsController;
   late InspectionPDFController _pdfController;
   late InspectionReportService _reportService;
-  
+
   final RxBool isGenerating = false.obs;
   final RxString currentStatus = ''.obs;
   final RxDouble progress = 0.0.obs;
@@ -46,7 +45,7 @@ class PdfGenerationService extends GetxService {
 
       // Convert Firebase document to CompleteReport model
       final completeReport = CompleteReport.fromJson(reportData);
-      
+
       currentStatus.value = 'Processing report data...';
       progress.value = 0.2;
 
@@ -74,19 +73,19 @@ class PdfGenerationService extends GetxService {
 
       // Map CompleteReport data to PDF controller
       await _mapCompleteReportToPdfController(report);
-      
+
       currentStatus.value = 'Downloading and processing images...';
       progress.value = 0.4;
 
       // Download and process images from URLs
       await _downloadAndSetImages(report.images);
-      
+
       currentStatus.value = 'Generating PDF document...';
       progress.value = 0.8;
 
       // Generate PDF using the optimized template
       await _generateOptimizedPDF();
-      
+
       currentStatus.value = 'PDF generated successfully!';
       progress.value = 1.0;
 
@@ -110,29 +109,30 @@ class PdfGenerationService extends GetxService {
     try {
       // Extract questionnaire responses
       final responses = report.questionnaireResponse.responses;
-      
+
       // Map basic property information
       _mapBasicPropertyInfo(responses);
-      
+
       // Map overall risk information
       _mapOverallRiskInfo(responses);
-      
+
       // Map elevation condition
       _mapElevationCondition(responses);
-      
+
       // Map roof condition
       _mapRoofCondition(responses);
-      
+
       // Map garage/outbuilding condition
       _mapGarageCondition(responses);
-      
+
       // Map dwelling hazards
       _mapDwellingHazards(responses);
-      
+
       // Map possible hazards
       _mapPossibleHazards(responses);
 
-      print('[PDFGenerationService] Successfully mapped report data to PDF controller');
+      print(
+          '[PDFGenerationService] Successfully mapped report data to PDF controller');
     } catch (e) {
       print('[PDFGenerationService] Error mapping report data: $e');
       rethrow;
@@ -141,127 +141,204 @@ class PdfGenerationService extends GetxService {
 
   /// Map basic property information
   void _mapBasicPropertyInfo(Map<String, Question> responses) {
-    _pdfController.updateClientName(_getQuestionValue(responses, 'insured_name'));
-    _pdfController.updateAddress(_getQuestionValue(responses, 'insured_street_address'));
+    _pdfController
+        .updateClientName(_getQuestionValue(responses, 'insured_name'));
+    _pdfController
+        .updateAddress(_getQuestionValue(responses, 'insured_street_address'));
     _pdfController.updateState(_getQuestionValue(responses, 'insured_state'));
-    _pdfController.updateZipCode(_getQuestionValue(responses, 'insured_zip_code'));
-    _pdfController.updatePolicyNumber(_getQuestionValue(responses, 'policy_number'));
-    _pdfController.updateDateOfOrigin(_getQuestionValue(responses, 'date_of_inspection'));
+    _pdfController
+        .updateZipCode(_getQuestionValue(responses, 'insured_zip_code'));
+    _pdfController
+        .updatePolicyNumber(_getQuestionValue(responses, 'policy_number'));
+    _pdfController
+        .updateDateOfOrigin(_getQuestionValue(responses, 'date_of_inspection'));
     // _pdfController.updateTypeOfInspection(_getQuestionValue(responses, 'type_of_inspection'));
     _pdfController.updateTypeOfInspection("Under-Writing");
-    _pdfController.updateInspectorName(_getQuestionValue(responses, 'inspectors_name'));
-    _pdfController.updateInspectionDate(_getQuestionValue(responses, 'date_of_inspection'));
-    _pdfController.updateReportDate(_getQuestionValue(responses, 'date_of_inspection'));
+    _pdfController
+        .updateInspectorName(_getQuestionValue(responses, 'inspectors_name'));
+    _pdfController.updateInspectionDate(
+        _getQuestionValue(responses, 'date_of_inspection'));
+    _pdfController
+        .updateReportDate(_getQuestionValue(responses, 'date_of_inspection'));
     // _pdfController.updateSummary(_getQuestionValue(responses, 'Summary'));
-    _pdfController.updateSummary("This property inspection has been completed in accordance with standard underwriting guidelines. The dwelling appears to be in good overall condition with no significant risks identified during the external inspection. All major systems and structural elements have been visually assessed and documented. Any observed conditions are noted in the detailed sections of this report for your review and consideration.");
+    _pdfController.updateSummary(
+        "This property inspection has been completed in accordance with standard underwriting guidelines. The dwelling appears to be in good overall condition with no significant risks identified during the external inspection. All major systems and structural elements have been visually assessed and documented. Any observed conditions are noted in the detailed sections of this report for your review and consideration.");
   }
 
   /// Map overall risk information
   void _mapOverallRiskInfo(Map<String, Question> responses) {
-    _pdfController.updateNeighborhood(_getQuestionValue(responses, 'neighborhood'));
-    _pdfController.updateAreaEconomy(_getQuestionValue(responses, 'area_economy'));
-    _pdfController.updateGatedCommunity(_getQuestionValue(responses, 'gated_community'));
-    _pdfController.updatePropertyVacant(_getQuestionValue(responses, 'property_vacant'));
-    _pdfController.updateNearestBodyOfWater(_getQuestionValue(responses, 'nearest_body_of_water'));
-    _pdfController.updateRentalProperty(_getQuestionValue(responses, 'rental_property'));
-    _pdfController.updateBusinessOnSite(_getQuestionValue(responses, 'business_on_site'));
-    _pdfController.updateSeasonalHome(_getQuestionValue(responses, 'seasonal_home'));
-    _pdfController.updateHistoricProperty(_getQuestionValue(responses, 'historic_property'));
-    _pdfController.updateNearestDwelling(_getQuestionValue(responses, 'nearest_dwelling_in_feet'));
+    _pdfController
+        .updateNeighborhood(_getQuestionValue(responses, 'neighborhood'));
+    _pdfController
+        .updateAreaEconomy(_getQuestionValue(responses, 'area_economy'));
+    _pdfController
+        .updateGatedCommunity(_getQuestionValue(responses, 'gated_community'));
+    _pdfController
+        .updatePropertyVacant(_getQuestionValue(responses, 'property_vacant'));
+    _pdfController.updateNearestBodyOfWater(
+        _getQuestionValue(responses, 'nearest_body_of_water'));
+    _pdfController
+        .updateRentalProperty(_getQuestionValue(responses, 'rental_property'));
+    _pdfController
+        .updateBusinessOnSite(_getQuestionValue(responses, 'business_on_site'));
+    _pdfController
+        .updateSeasonalHome(_getQuestionValue(responses, 'seasonal_home'));
+    _pdfController.updateHistoricProperty(
+        _getQuestionValue(responses, 'historic_property'));
+    _pdfController.updateNearestDwelling(
+        _getQuestionValue(responses, 'nearest_dwelling_in_feet'));
   }
 
   /// Map elevation condition
   void _mapElevationCondition(Map<String, Question> responses) {
-    _pdfController.updateDwellingType(_getQuestionValue(responses, 'dwelling_type'));
+    _pdfController
+        .updateDwellingType(_getQuestionValue(responses, 'dwelling_type'));
     _pdfController.updateYearBuilt(_getQuestionValue(responses, 'year_built'));
-    _pdfController.updateTypeOfFoundation(_getQuestionValue(responses, 'type_of_foundation'));
-    _pdfController.updatePrimaryConstruction(_getQuestionValue(responses, 'primary_construction'));
-    _pdfController.updateNumberOfStories(_getQuestionValue(responses, 'number_of_stories'));
-    _pdfController.updateLivingArea(_getQuestionValue(responses, 'living_area_sf'));
+    _pdfController.updateTypeOfFoundation(
+        _getQuestionValue(responses, 'type_of_foundation'));
+    _pdfController.updatePrimaryConstruction(
+        _getQuestionValue(responses, 'primary_construction'));
+    _pdfController.updateNumberOfStories(
+        _getQuestionValue(responses, 'number_of_stories'));
+    _pdfController
+        .updateLivingArea(_getQuestionValue(responses, 'living_area_sf'));
     _pdfController.updateLotSize(_getQuestionValue(responses, 'lot_size'));
     _pdfController.updateSiding(_getQuestionValue(responses, 'siding'));
     _pdfController.updateHvac(_getQuestionValue(responses, 'hvac'));
-    _pdfController.updateNumberOfSystems(_getQuestionValue(responses, 'number_of_hvac_systems'));
-    _pdfController.updateHvacSerial(_getQuestionValue(responses, 'hvac_serial_numbers'));
-    _pdfController.updateGuttersAndDownspout(_getQuestionValue(responses, 'gutters_and_downspout'));
+    _pdfController.updateNumberOfSystems(
+        _getQuestionValue(responses, 'number_of_hvac_systems'));
+    _pdfController
+        .updateHvacSerial(_getQuestionValue(responses, 'hvac_serial_numbers'));
+    _pdfController.updateGuttersAndDownspout(
+        _getQuestionValue(responses, 'gutters_and_downspout'));
     _pdfController.updateFuelTank(_getQuestionValue(responses, 'fuel_tank'));
-    _pdfController.updateSidingDamage(_getQuestionValue(responses, 'siding_damage'));
-    _pdfController.updatePeelingPaint(_getQuestionValue(responses, 'peeling_paint'));
+    _pdfController
+        .updateSidingDamage(_getQuestionValue(responses, 'siding_damage'));
+    _pdfController
+        .updatePeelingPaint(_getQuestionValue(responses, 'peeling_paint'));
     _pdfController.updateMildewMoss(_getQuestionValue(responses, 'mildewmoss'));
-    _pdfController.updateWindowDamage(_getQuestionValue(responses, 'window_damage'));
-    _pdfController.updateFoundationCracks(_getQuestionValue(responses, 'foundation_cracks'));
-    _pdfController.updateWallCracks(_getQuestionValue(responses, 'wall_cracks'));
-    _pdfController.updateChimneyDamage(_getQuestionValue(responses, 'chimney_damage'));
-    _pdfController.updateWaterDamage(_getQuestionValue(responses, 'water_damage'));
-    _pdfController.updateUnderRenovation(_getQuestionValue(responses, 'under_renovation'));
-    _pdfController.updateMainBreakerPanel(_getQuestionValue(responses, 'main_breaker_panel'));
-    _pdfController.updateWaterSpicketDamage(_getQuestionValue(responses, 'water_spicket_damage'));
-    _pdfController.updateDoorDamage(_getQuestionValue(responses, 'door_damage'));
+    _pdfController
+        .updateWindowDamage(_getQuestionValue(responses, 'window_damage'));
+    _pdfController.updateFoundationCracks(
+        _getQuestionValue(responses, 'foundation_cracks'));
+    _pdfController
+        .updateWallCracks(_getQuestionValue(responses, 'wall_cracks'));
+    _pdfController
+        .updateChimneyDamage(_getQuestionValue(responses, 'chimney_damage'));
+    _pdfController
+        .updateWaterDamage(_getQuestionValue(responses, 'water_damage'));
+    _pdfController.updateUnderRenovation(
+        _getQuestionValue(responses, 'under_renovation'));
+    _pdfController.updateMainBreakerPanel(
+        _getQuestionValue(responses, 'main_breaker_panel'));
+    _pdfController.updateWaterSpicketDamage(
+        _getQuestionValue(responses, 'water_spicket_damage'));
+    _pdfController
+        .updateDoorDamage(_getQuestionValue(responses, 'door_damage'));
   }
 
   /// Map roof condition
   void _mapRoofCondition(Map<String, Question> responses) {
-    _pdfController.updateRoofMaterial(_getQuestionValue(responses, 'roof_materials'));
-    _pdfController.updateRoofCovering(_getQuestionValue(responses, 'roof_covering'));
-    _pdfController.updateAgeOfRoof(_getQuestionValue(responses, 'age_of_roof_in_years'));
-    _pdfController.updateShapeOfRoof(_getQuestionValue(responses, 'shape_of_roof'));
-    _pdfController.updateTreeLimbsOnRoof(_getQuestionValue(responses, 'tree_limbs_on_roof'));
-    _pdfController.updateDebrisOnRoof(_getQuestionValue(responses, 'debris_on_roof'));
-    _pdfController.updateSolarPanel(_getQuestionValue(responses, 'solar_panel'));
-    _pdfController.updateExposedFelt(_getQuestionValue(responses, 'exposed_felt'));
-    _pdfController.updateMissingShinglesTile(_getQuestionValue(responses, 'missing_shinglestiles'));
-    _pdfController.updatePriorRepairs(_getQuestionValue(responses, 'prior_repairs'));
-    _pdfController.updateCurlingShingles(_getQuestionValue(responses, 'curling_shingles'));
+    _pdfController
+        .updateRoofMaterial(_getQuestionValue(responses, 'roof_materials'));
+    _pdfController
+        .updateRoofCovering(_getQuestionValue(responses, 'roof_covering'));
+    _pdfController
+        .updateAgeOfRoof(_getQuestionValue(responses, 'age_of_roof_in_years'));
+    _pdfController
+        .updateShapeOfRoof(_getQuestionValue(responses, 'shape_of_roof'));
+    _pdfController.updateTreeLimbsOnRoof(
+        _getQuestionValue(responses, 'tree_limbs_on_roof'));
+    _pdfController
+        .updateDebrisOnRoof(_getQuestionValue(responses, 'debris_on_roof'));
+    _pdfController
+        .updateSolarPanel(_getQuestionValue(responses, 'solar_panel'));
+    _pdfController
+        .updateExposedFelt(_getQuestionValue(responses, 'exposed_felt'));
+    _pdfController.updateMissingShinglesTile(
+        _getQuestionValue(responses, 'missing_shinglestiles'));
+    _pdfController
+        .updatePriorRepairs(_getQuestionValue(responses, 'prior_repairs'));
+    _pdfController.updateCurlingShingles(
+        _getQuestionValue(responses, 'curling_shingles'));
     _pdfController.updateAlgaeMoss(_getQuestionValue(responses, 'algaemoss'));
-    _pdfController.updateTarpOnRoof(_getQuestionValue(responses, 'tarp_on_roof'));
-    _pdfController.updateBrokenOrCrackTiles(_getQuestionValue(responses, 'broken_or_cracked_tiles'));
-    _pdfController.updateSatelliteDish(_getQuestionValue(responses, 'satellite_dish'));
-    _pdfController.updateUnevenDecking(_getQuestionValue(responses, 'uneven_decking'));
+    _pdfController
+        .updateTarpOnRoof(_getQuestionValue(responses, 'tarp_on_roof'));
+    _pdfController.updateBrokenOrCrackTiles(
+        _getQuestionValue(responses, 'broken_or_cracked_tiles'));
+    _pdfController
+        .updateSatelliteDish(_getQuestionValue(responses, 'satellite_dish'));
+    _pdfController
+        .updateUnevenDecking(_getQuestionValue(responses, 'uneven_decking'));
   }
 
   /// Map garage/outbuilding condition
   void _mapGarageCondition(Map<String, Question> responses) {
-    _pdfController.updateGarageType(_getQuestionValue(responses, 'garage_type'));
-    _pdfController.updateOutbuilding(_getQuestionValue(responses, 'garageoutbuilding_overall_condition'));
-    _pdfController.updateOutbuildingType(_getQuestionValue(responses, 'outbuilding_type'));
-    _pdfController.updateFence(_getQuestionValue(responses, 'fence_heighttypedetails'));
-    _pdfController.updateGarageCondition(_getQuestionValue(responses, 'garage_condition'));
-    _pdfController.updateCarportOrAwning(_getQuestionValue(responses, 'carport_or_awning'));
-    _pdfController.updateCarportConstruction(_getQuestionValue(responses, 'carport_construction'));
-    _pdfController.updateFenceCondition(_getQuestionValue(responses, 'fence_condition'));
+    _pdfController
+        .updateGarageType(_getQuestionValue(responses, 'garage_type'));
+    _pdfController.updateOutbuilding(
+        _getQuestionValue(responses, 'garageoutbuilding_overall_condition'));
+    _pdfController.updateOutbuildingType(
+        _getQuestionValue(responses, 'outbuilding_type'));
+    _pdfController
+        .updateFence(_getQuestionValue(responses, 'fence_heighttypedetails'));
+    _pdfController.updateGarageCondition(
+        _getQuestionValue(responses, 'garage_condition'));
+    _pdfController.updateCarportOrAwning(
+        _getQuestionValue(responses, 'carport_or_awning'));
+    _pdfController.updateCarportConstruction(
+        _getQuestionValue(responses, 'carport_construction'));
+    _pdfController
+        .updateFenceCondition(_getQuestionValue(responses, 'fence_condition'));
   }
 
   /// Map dwelling hazards
   void _mapDwellingHazards(Map<String, Question> responses) {
-    _pdfController.updateBoardedDoorsWindows(_getQuestionValue(responses, 'boarded_doorswindows'));
-    _pdfController.updateOvergrownVegetation(_getQuestionValue(responses, 'overgrown_vegetation'));
-    _pdfController.updateAbandonedVehicles(_getQuestionValue(responses, 'abandoned_vehicles'));
-    _pdfController.updateMissingDamageSteps(_getQuestionValue(responses, 'missingdamaged_steps'));
-    _pdfController.updateMissingDamageRailing(_getQuestionValue(responses, 'missingdamage_railing'));
-    _pdfController.updateDwellingSidingDamage(_getQuestionValue(responses, 'siding_damaged'));
-    _pdfController.updateHurricaneShutters(_getQuestionValue(responses, 'hurricane_shutters'));
+    _pdfController.updateBoardedDoorsWindows(
+        _getQuestionValue(responses, 'boarded_doorswindows'));
+    _pdfController.updateOvergrownVegetation(
+        _getQuestionValue(responses, 'overgrown_vegetation'));
+    _pdfController.updateAbandonedVehicles(
+        _getQuestionValue(responses, 'abandoned_vehicles'));
+    _pdfController.updateMissingDamageSteps(
+        _getQuestionValue(responses, 'missingdamaged_steps'));
+    _pdfController.updateMissingDamageRailing(
+        _getQuestionValue(responses, 'missingdamage_railing'));
+    _pdfController.updateDwellingSidingDamage(
+        _getQuestionValue(responses, 'siding_damaged'));
+    _pdfController.updateHurricaneShutters(
+        _getQuestionValue(responses, 'hurricane_shutters'));
     _pdfController.updateTreeBranch(_getQuestionValue(responses, 'treebranch'));
-    _pdfController.updateChimneyThroughRoof(_getQuestionValue(responses, 'chimney_through_roof'));
-    _pdfController.updateFireplacePitOutside(_getQuestionValue(responses, 'fireplacepit_outside'));
-    _pdfController.updateSecurityBars(_getQuestionValue(responses, 'security_bars'));
+    _pdfController.updateChimneyThroughRoof(
+        _getQuestionValue(responses, 'chimney_through_roof'));
+    _pdfController.updateFireplacePitOutside(
+        _getQuestionValue(responses, 'fireplacepit_outside'));
+    _pdfController
+        .updateSecurityBars(_getQuestionValue(responses, 'security_bars'));
     // _pdfController.updateFaciaSoffitDamage(_getQuestionValue(responses, 'facia_soffit_damage'));
     _pdfController.updateFaciaSoffitDamage("No");
   }
 
   /// Map possible hazards
   void _mapPossibleHazards(Map<String, Question> responses) {
-    _pdfController.updateSwimmingPool(_getQuestionValue(responses, 'swimming_pool'));
-    _pdfController.updateDivingBoardOrSlide(_getQuestionValue(responses, 'diving_board_or_slide'));
-    _pdfController.updatePoolFenced(_getQuestionValue(responses, 'pool_fenced'));
+    _pdfController
+        .updateSwimmingPool(_getQuestionValue(responses, 'swimming_pool'));
+    _pdfController.updateDivingBoardOrSlide(
+        _getQuestionValue(responses, 'diving_board_or_slide'));
+    _pdfController
+        .updatePoolFenced(_getQuestionValue(responses, 'pool_fenced'));
     _pdfController.updateTrampoline(_getQuestionValue(responses, 'trampoline'));
     _pdfController.updateSwingSet(_getQuestionValue(responses, 'swing_set'));
-    _pdfController.updateBasketballGoal(_getQuestionValue(responses, 'basketball_goal'));
+    _pdfController
+        .updateBasketballGoal(_getQuestionValue(responses, 'basketball_goal'));
     _pdfController.updateDog(_getQuestionValue(responses, 'dog'));
     _pdfController.updateDogType(_getQuestionValue(responses, 'dog_type'));
     _pdfController.updateDogSign(_getQuestionValue(responses, 'dog_sign'));
-    _pdfController.updateSkateboardOrBikeRamp(_getQuestionValue(responses, 'skateboard_or_bike_ramp'));
+    _pdfController.updateSkateboardOrBikeRamp(
+        _getQuestionValue(responses, 'skateboard_or_bike_ramp'));
     _pdfController.updateTreeHouse(_getQuestionValue(responses, 'tree_house'));
-    _pdfController.updateDebrisInYard(_getQuestionValue(responses, 'debris_in_yard'));
+    _pdfController
+        .updateDebrisInYard(_getQuestionValue(responses, 'debris_in_yard'));
   }
 
   /// Download and set images from URLs
@@ -269,41 +346,47 @@ class PdfGenerationService extends GetxService {
     try {
       // Download images from URLs and convert to Uint8List
       final downloadTasks = <Future<void>>[];
-      
+
       // Primary risk photos
       if (images.primaryRisk.isNotEmpty) {
-        downloadTasks.add(_downloadImagesForCategory('primary_risk', images.primaryRisk));
+        downloadTasks.add(
+            _downloadImagesForCategory('primary_risk', images.primaryRisk));
       }
-      
+
       // Front elevation photos
       if (images.frontElevation.isNotEmpty) {
-        downloadTasks.add(_downloadImagesForCategory('front_elevation', images.frontElevation));
+        downloadTasks.add(_downloadImagesForCategory(
+            'front_elevation', images.frontElevation));
       }
-      
+
       // Right elevation photos
       if (images.rightElevation.isNotEmpty) {
-        downloadTasks.add(_downloadImagesForCategory('right_elevation', images.rightElevation));
+        downloadTasks.add(_downloadImagesForCategory(
+            'right_elevation', images.rightElevation));
       }
-      
+
       // Rear elevation photos
       if (images.rearElevation.isNotEmpty) {
-        downloadTasks.add(_downloadImagesForCategory('rear_elevation', images.rearElevation));
+        downloadTasks.add(
+            _downloadImagesForCategory('rear_elevation', images.rearElevation));
       }
-      
+
       // Roof photos
       if (images.roof.isNotEmpty) {
         downloadTasks.add(_downloadImagesForCategory('roof', images.roof));
       }
-      
+
       // Additional photos
       if (images.additional.isNotEmpty) {
-        downloadTasks.add(_downloadImagesForCategory('additional', images.additional));
+        downloadTasks
+            .add(_downloadImagesForCategory('additional', images.additional));
       }
-      
+
       // Wait for all downloads to complete
       await Future.wait(downloadTasks);
-      
-      print('[PDFGenerationService] All images downloaded and processed successfully');
+
+      print(
+          '[PDFGenerationService] All images downloaded and processed successfully');
     } catch (e) {
       print('[PDFGenerationService] Error downloading images: $e');
       rethrow;
@@ -311,7 +394,8 @@ class PdfGenerationService extends GetxService {
   }
 
   /// Download images for a specific category
-  Future<void> _downloadImagesForCategory(String category, List<String> imageUrls) async {
+  Future<void> _downloadImagesForCategory(
+      String category, List<String> imageUrls) async {
     try {
       for (final url in imageUrls) {
         if (url.isNotEmpty) {
@@ -322,7 +406,8 @@ class PdfGenerationService extends GetxService {
         }
       }
     } catch (e) {
-      print('[PDFGenerationService] Error downloading images for category $category: $e');
+      print(
+          '[PDFGenerationService] Error downloading images for category $category: $e');
       // Don't rethrow - continue with other categories
     }
   }
@@ -334,7 +419,8 @@ class PdfGenerationService extends GetxService {
       if (response.statusCode == 200) {
         return response.bodyBytes;
       } else {
-        print('[PDFGenerationService] Failed to download image: ${response.statusCode}');
+        print(
+            '[PDFGenerationService] Failed to download image: ${response.statusCode}');
         return null;
       }
     } catch (e) {
@@ -368,20 +454,22 @@ class PdfGenerationService extends GetxService {
       // Try to find the report in local reports first
       final localReports = _reportsController.getUploadedReports();
       final report = localReports.firstWhereOrNull((r) => r.id == reportId);
-      
+
       if (report == null) {
         throw Exception('Local report not found with ID: $reportId');
       }
 
-      currentStatus.value = 'Converting local report to complete report format...';
+      currentStatus.value =
+          'Converting local report to complete report format...';
       progress.value = 0.2;
 
       // Convert local report to CompleteReport format
       final completeReport = _convertLocalReportToCompleteReport(report);
-      
+
       return await _generatePdfFromCompleteReport(completeReport);
     } catch (e) {
-      print('[PDFGenerationService] Error generating PDF from local report: $e');
+      print(
+          '[PDFGenerationService] Error generating PDF from local report: $e');
       Get.snackbar(
         'Error',
         'Failed to generate PDF from local report: ${e.toString()}',
@@ -399,13 +487,15 @@ class PdfGenerationService extends GetxService {
   CompleteReport _convertLocalReportToCompleteReport(dynamic localReport) {
     // This is a simplified conversion - adjust based on your actual data structure
     final Map<String, Question> questionResponses = {};
-    
+
     // Convert questionnaire responses to Question objects
     if (localReport.questionnaireResponses is Map<String, dynamic>) {
-      (localReport.questionnaireResponses as Map<String, dynamic>).forEach((key, value) {
+      (localReport.questionnaireResponses as Map<String, dynamic>)
+          .forEach((key, value) {
         questionResponses[key] = Question(
           questionId: key,
-          questionText: '', // You might want to maintain a mapping of question IDs to texts
+          questionText:
+              '', // You might want to maintain a mapping of question IDs to texts
           questionType: 'text', // Default type
           section: 'general', // Default section
           value: value,
@@ -427,7 +517,8 @@ class PdfGenerationService extends GetxService {
       createdAt: localReport.createdAt.toIso8601String(),
       images: images,
       inspectorId: localReport.userId,
-      questionnaireResponse: QuestionnaireResponse(responses: questionResponses),
+      questionnaireResponse:
+          QuestionnaireResponse(responses: questionResponses),
       reportId: localReport.id,
       status: localReport.status.toString(),
       updatedAt: localReport.updatedAt.toIso8601String(),
@@ -514,14 +605,15 @@ class PdfGenerationService extends GetxService {
   Future<void> _generateOptimizedPDF() async {
     try {
       print('[PDFGenerationService] Generating optimized PDF...');
-      
+
       // Call the PDF controller's generatePDF method which uses the optimized template
       await _pdfController.generatePDF();
-      
+
       // Update the PDF path from the controller
       final generatedPath = _pdfController.pdfPath.value;
       if (generatedPath.isNotEmpty) {
-        print('[PDFGenerationService] PDF generated successfully at: $generatedPath');
+        print(
+            '[PDFGenerationService] PDF generated successfully at: $generatedPath');
       } else {
         throw Exception('PDF generation completed but no path was set');
       }

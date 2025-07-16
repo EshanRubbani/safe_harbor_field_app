@@ -10,6 +10,9 @@ class MultipleChoiceWidget extends StatelessWidget {
   final String? Function(String?)? validator;
   final bool isHorizontal;
   final bool hasError;
+  final bool hasOther;
+  final String? otherValue;
+  final void Function(String)? onOtherChanged;
 
   const MultipleChoiceWidget({
     Key? key,
@@ -21,6 +24,9 @@ class MultipleChoiceWidget extends StatelessWidget {
     this.validator,
     this.isHorizontal = true,
     this.hasError = false,
+    this.hasOther = false,
+    this.otherValue,
+    this.onOtherChanged,
   }) : super(key: key);
 
   @override
@@ -109,13 +115,27 @@ class MultipleChoiceWidget extends StatelessWidget {
 
   Widget _buildVerticalOptions(ThemeData theme, ColorScheme colorScheme) {
     return Column(
-      children: options.map((option) {
-        final isSelected = selectedValue == option;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: _buildOptionButton(option, isSelected, theme, colorScheme),
-        );
-      }).toList(),
+      children: [
+        ...options.map((option) {
+          final isSelected = selectedValue == option;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: _buildOptionButton(option, isSelected, theme, colorScheme),
+          );
+        }).toList(),
+        if (hasOther)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: TextFormField(
+              initialValue: otherValue,
+              onChanged: onOtherChanged,
+              decoration: InputDecoration(
+                labelText: 'Other',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

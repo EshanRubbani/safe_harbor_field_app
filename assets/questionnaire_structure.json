@@ -1,0 +1,901 @@
+{
+  "lastUpdated": "2025-07-14T10:00:54.349Z",
+  "questions": [
+    {
+      "options": [
+        "AL 1",
+        "AL 2",
+        "AL 3",
+        "AL 4",
+        "AL 5",
+        "AL 6",
+        "AL 7",
+        "AL 8",
+        "AL 9",
+        "AL 10",
+        "AL 11",
+        "AL 12",
+        "AL 13",
+        "AL 14",
+        "AL 15",
+        "AL 16",
+        "AL 17",
+        "AL 18",
+        "AL 19",
+        "AL 20",
+        "AL 21",
+        "AL 22",
+        "AL 23",
+        "AL 24",
+        "AL 25",
+        "AL 26",
+        "AL 27",
+        "AL 28",
+        "AL 29",
+        "AL 30",
+        "AL 31",
+        "AL 32",
+        "AL 33",
+        "AL 34",
+        "AL 35",
+        "AL 36",
+        "AL 37",
+        "AL 38",
+        "AL 39",
+        "AL 40",
+        "AL 41",
+        "AL 42",
+        "AL 43",
+        "AL 44",
+        "AL 45",
+        "AL 46",
+        "AL 47",
+        "AL 48",
+        "AL 49",
+        "AL 50",
+        "AL 51",
+        "AL 52",
+        "AL 53",
+        "AL 54",
+        "AL 55",
+        "TX 1",
+        "TX 2",
+        "TX 3",
+        "TX 4",
+        "TX 5",
+        "TX 6",
+        "TX 7",
+        "TX 8",
+        "TX 9",
+        "TX 10",
+        "TX 11",
+        "TX 12",
+        "TX 13",
+        "TX 14",
+        "TX 15"
+      ],
+      "id": "droneNumber",
+      "label": "Drone Number",
+      "type": "radio"
+    },
+    {
+      "id": "policyNumber",
+      "label": "Policy Number",
+      "type": "text"
+    },
+    {
+      "label": "Insured Name",
+      "id": "insuredName",
+      "type": "text"
+    },
+    {
+      "id": "insuredStreetAddress",
+      "label": "Insured Street Address",
+      "type": "text"
+    },
+    {
+      "options": [
+        "Alabama",
+        "Alaska",
+        "Arizona",
+        "Arkansas",
+        "California",
+        "Colorado",
+        "Connecticut",
+        "Delaware",
+        "Florida",
+        "Georgia",
+        "Hawaii",
+        "Idaho",
+        "Illinois",
+        "Indiana",
+        "Iowa",
+        "Kansas",
+        "Kentucky",
+        "Louisiana",
+        "Maine",
+        "Maryland",
+        "Massachusetts",
+        "Michigan",
+        "Minnesota",
+        "Mississippi",
+        "Missouri",
+        "Montana",
+        "Nebraska",
+        "Nevada",
+        "New Hampshire",
+        "New Jersey",
+        "New Mexico",
+        "New York",
+        "North Carolina",
+        "North Dakota",
+        "Ohio",
+        "Oklahoma",
+        "Oregon",
+        "Pennsylvania",
+        "Rhode Island",
+        "South Carolina",
+        "South Dakota",
+        "Tennessee",
+        "Texas",
+        "Utah",
+        "Vermont",
+        "Virginia",
+        "Washington",
+        "West Virginia",
+        "Wisconsin",
+        "Wyoming"
+      ],
+      "label": "Insured State",
+      "id": "insuredState",
+      "type": "radio"
+    },
+    {
+      "label": "Insured Zip Code",
+      "id": "insuredZipCode",
+      "type": "text"
+    },
+    {
+      "id": "dateOfInspection",
+      "label": "Date of Inspection",
+      "type": "text"
+    },
+    {
+      "options": [
+        "Suburban",
+        "Rural",
+        "City"
+      ],
+      "id": "neighborhood",
+      "label": "Neighborhood",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Stable",
+        "Unstable",
+        "Declining"
+      ],
+      "label": "Area Economy",
+      "id": "areaEconomy",
+      "type": "radio"
+    },
+    {
+      "label": "Gated Community",
+      "id": "gatedCommunity",
+      "type": "yesno"
+    },
+    {
+      "id": "propertyVacant",
+      "label": "Property Vacant",
+      "type": "yesno"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Unknown",
+        "Other"
+      ],
+      "label": "Nearest Body of Water",
+      "id": "nearestBodyOfWater",
+      "type": "radio"
+    },
+    {
+      "id": "rentalProperty",
+      "label": "Rental Property",
+      "type": "yesnounknown"
+    },
+    {
+      "id": "businessOnSite",
+      "label": "Business On Site",
+      "type": "yesno"
+    },
+    {
+      "id": "seasonalHome",
+      "label": "Seasonal Home",
+      "type": "yesnounknown"
+    },
+    {
+      "id": "historicProperty",
+      "label": "Historic Property",
+      "type": "yesnounknown"
+    },
+    {
+      "label": "Nearest Dwelling (in feet)",
+      "id": "nearestDwelling",
+      "type": "text"
+    },
+    {
+      "options": [
+        "Above average",
+        "Average",
+        "Below average"
+      ],
+      "label": "Overall Elevation Condition",
+      "id": "overallElevationCondition",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Single Family",
+        "Multi Family"
+      ],
+      "id": "dwellingType",
+      "label": "Dwelling Type",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Unknown",
+        "Other"
+      ],
+      "label": "Year Built",
+      "id": "yearBuilt",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Slab",
+        "Elevated",
+        "Floating"
+      ],
+      "label": "Type of Foundation",
+      "id": "typeOfFoundation",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Wood Frame",
+        "Steel",
+        "Masonry"
+      ],
+      "id": "primaryConstruction",
+      "label": "Primary Construction",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "1",
+        "2",
+        "3",
+        "Other"
+      ],
+      "id": "numberOfStories",
+      "label": "Number of Stories",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Unknown",
+        "Other"
+      ],
+      "id": "livingArea",
+      "label": "Living Area (SF)",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Unknown",
+        "Other"
+      ],
+      "id": "lotSize",
+      "label": "Lot Size",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Wood",
+        "Vinyl",
+        "Masonry",
+        "Other"
+      ],
+      "id": "siding",
+      "label": "Siding",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Central",
+        "Window Unit",
+        "Other"
+      ],
+      "id": "hvac",
+      "label": "HVAC",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "1",
+        "2",
+        "Other"
+      ],
+      "label": "Number of HVAC Systems",
+      "id": "numberOfHVACSystems",
+      "type": "radio"
+    },
+    {
+      "id": "hvacSerialNumbers",
+      "label": "HVAC Serial Number(s) (Separate by commas)",
+      "type": "text"
+    },
+    {
+      "id": "guttersAndDownspout",
+      "label": "Gutters and Downspout",
+      "type": "yesno"
+    },
+    {
+      "label": "Fuel Tank",
+      "id": "fuelTank",
+      "type": "yesno"
+    },
+    {
+      "label": "Siding Damage",
+      "id": "sidingDamage",
+      "type": "yesno"
+    },
+    {
+      "label": "Peeling Paint",
+      "id": "peelingPaint",
+      "type": "yesno"
+    },
+    {
+      "label": "Mildew/Moss",
+      "id": "mildewMoss",
+      "type": "yesno"
+    },
+    {
+      "id": "windowDamage",
+      "label": "Window Damage",
+      "type": "yesno"
+    },
+    {
+      "id": "foundationCracks",
+      "label": "Foundation Cracks",
+      "type": "yesno"
+    },
+    {
+      "id": "wallCracks",
+      "label": "Wall Cracks",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Yes",
+        "No",
+        "N/A"
+      ],
+      "id": "chimneyDamage",
+      "label": "Chimney Damage",
+      "type": "radio"
+    },
+    {
+      "id": "waterDamage",
+      "label": "Water Damage",
+      "type": "yesno"
+    },
+    {
+      "id": "underRenovation",
+      "label": "Under Renovation",
+      "type": "yesno"
+    },
+    {
+      "label": "Main Breaker Panel",
+      "id": "mainBreakerPanel",
+      "type": "yesno"
+    },
+    {
+      "id": "waterSpicketDamage",
+      "label": "Water Spicket Damage",
+      "type": "yesno"
+    },
+    {
+      "id": "doorDamage",
+      "label": "Door Damage",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Above average",
+        "Average",
+        "Below average"
+      ],
+      "label": "Overall Roof Condition",
+      "id": "overallRoofCondition",
+      "type": "radio"
+    },
+    {
+      "id": "roofMaterials",
+      "label": "Roof Materials",
+      "type": "text"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Asphalt",
+        "Wood",
+        "Metal",
+        "Other"
+      ],
+      "label": "Roof Covering",
+      "id": "roofCovering",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "0-5",
+        "6-10",
+        "11-15",
+        "16+"
+      ],
+      "label": "Age of Roof (in years)",
+      "id": "ageOfRoof",
+      "type": "radio"
+    },
+    {
+      "hasOther": true,
+      "options": [
+        "Hip and Valley",
+        "Flat",
+        "Gable",
+        "Complex",
+        "Hip",
+        "Other"
+      ],
+      "label": "Shape of Roof",
+      "id": "shapeOfRoof",
+      "type": "radio"
+    },
+    {
+      "id": "treeLimbsOnRoof",
+      "label": "Tree Limbs on Roof",
+      "type": "yesno"
+    },
+    {
+      "label": "Debris On Roof",
+      "id": "debrisOnRoof",
+      "type": "yesno"
+    },
+    {
+      "id": "solarPanel",
+      "label": "Solar Panel",
+      "type": "yesno"
+    },
+    {
+      "label": "Exposed Felt",
+      "id": "exposedFelt",
+      "type": "yesno"
+    },
+    {
+      "label": "Missing Shingles/Tiles",
+      "id": "missingShinglesTiles",
+      "type": "yesno"
+    },
+    {
+      "label": "Prior Repairs",
+      "id": "priorRepairs",
+      "type": "yesno"
+    },
+    {
+      "label": "Curling Shingles",
+      "id": "curlingShingles",
+      "type": "yesno"
+    },
+    {
+      "label": "Algae/Moss",
+      "id": "algaeMoss",
+      "type": "yesno"
+    },
+    {
+      "id": "tarpOnRoof",
+      "label": "Tarp On Roof",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Yes",
+        "No",
+        "N/A"
+      ],
+      "label": "Broken or Cracked Tiles",
+      "id": "brokenOrCrackedTiles",
+      "type": "radio"
+    },
+    {
+      "label": "Satellite Dish",
+      "id": "satelliteDish",
+      "type": "yesno"
+    },
+    {
+      "id": "unevenDecking",
+      "label": "Uneven Decking",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Above average",
+        "Average",
+        "Below average",
+        "N/A"
+      ],
+      "label": "Garage/Outbuilding Overall Condition",
+      "id": "garageOutbuildingCondition",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Attached",
+        "Detached",
+        "N/A"
+      ],
+      "id": "garageType",
+      "label": "Garage Type",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Yes",
+        "No",
+        "N/A"
+      ],
+      "id": "outbuilding",
+      "label": "Outbuilding",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Vinyl",
+        "Metal",
+        "Wood",
+        "N/A"
+      ],
+      "label": "Outbuilding Type",
+      "id": "outbuildingType",
+      "type": "radio"
+    },
+    {
+      "label": "Fence (Height/type/details)",
+      "id": "fenceDetails",
+      "type": "text"
+    },
+    {
+      "options": [
+        "Above average",
+        "Average",
+        "Below average",
+        "N/A"
+      ],
+      "id": "garageCondition",
+      "label": "Garage Condition",
+      "type": "radio"
+    },
+    {
+      "label": "Carport or Awning",
+      "id": "carportOrAwning",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Metal",
+        "Wood",
+        "N/A"
+      ],
+      "id": "carportConstruction",
+      "label": "Carport Construction",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Above average",
+        "Average",
+        "Below average",
+        "N/A"
+      ],
+      "label": "Fence Condition",
+      "id": "fenceCondition",
+      "type": "radio"
+    },
+    {
+      "id": "boardedDoorsWindows",
+      "label": "Boarded Doors/Windows",
+      "type": "yesno"
+    },
+    {
+      "label": "Overgrown Vegetation",
+      "id": "overgrownVegetation",
+      "type": "yesno"
+    },
+    {
+      "id": "abandonedVehicles",
+      "label": "Abandoned Vehicles",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Yes",
+        "No",
+        "N/A"
+      ],
+      "id": "missingDamagedSteps",
+      "label": "Missing/Damaged Steps",
+      "type": "radio"
+    },
+    {
+      "options": [
+        "Yes",
+        "No",
+        "N/A"
+      ],
+      "label": "Missing/Damage Railing",
+      "id": "missingDamageRailing",
+      "type": "radio"
+    },
+    {
+      "label": "Siding Damage",
+      "id": "sidingDamageHazard",
+      "type": "yesno"
+    },
+    {
+      "label": "Hurricane Shutters",
+      "id": "hurricaneShutters",
+      "type": "yesno"
+    },
+    {
+      "label": "Tree/Branch",
+      "id": "treeBranch",
+      "type": "yesno"
+    },
+    {
+      "label": "Chimney Through Roof",
+      "id": "chimneyThroughRoof",
+      "type": "yesno"
+    },
+    {
+      "label": "Fireplace/Pit Outside",
+      "id": "fireplacePitOutside",
+      "type": "yesno"
+    },
+    {
+      "label": "Security Bars",
+      "id": "securityBars",
+      "type": "yesno"
+    },
+    {
+      "id": "fasciaSoffitDamage",
+      "label": "Fascia/Soffit Damage",
+      "type": "yesno"
+    },
+    {
+      "label": "Swimming Pool",
+      "id": "swimmingPool",
+      "type": "yesno"
+    },
+    {
+      "label": "Diving Board or Slide",
+      "id": "divingBoardOrSlide",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Yes",
+        "No",
+        "N/A"
+      ],
+      "id": "poolFenced",
+      "label": "Pool Fenced",
+      "type": "radio"
+    },
+    {
+      "id": "trampoline",
+      "label": "Trampoline",
+      "type": "yesno"
+    },
+    {
+      "label": "Swing Set",
+      "id": "swingSet",
+      "type": "yesno"
+    },
+    {
+      "label": "Basketball Goal",
+      "id": "basketballGoal",
+      "type": "yesno"
+    },
+    {
+      "label": "Dog",
+      "id": "dog",
+      "type": "yesno"
+    },
+    {
+      "options": [
+        "Small",
+        "Medium",
+        "Large",
+        "N/A"
+      ],
+      "label": "Dog Type",
+      "id": "dogType",
+      "type": "radio"
+    },
+    {
+      "label": "Dog Sign",
+      "id": "dogSign",
+      "type": "yesno"
+    },
+    {
+      "id": "skateboardOrBikeRamp",
+      "label": "Skateboard or Bike Ramp",
+      "type": "yesno"
+    },
+    {
+      "label": "Tree House",
+      "id": "treeHouse",
+      "type": "yesno"
+    },
+    {
+      "label": "Debris in Yard",
+      "id": "debrisInYard",
+      "type": "yesno"
+    }
+  ],
+  "version": "1.0",
+  "sections": [
+    {
+      "questions": [
+        "droneNumber",
+        "question_1752487244567"
+      ],
+      "title": "Inspector Information"
+    },
+    {
+      "questions": [
+        "policyNumber",
+        "insuredName",
+        "insuredStreetAddress",
+        "insuredState",
+        "insuredZipCode",
+        "dateOfInspection"
+      ],
+      "title": "Insured Information"
+    },
+    {
+      "questions": [
+        "neighborhood",
+        "areaEconomy",
+        "gatedCommunity",
+        "propertyVacant",
+        "nearestBodyOfWater",
+        "rentalProperty",
+        "businessOnSite",
+        "seasonalHome",
+        "historicProperty",
+        "nearestDwelling"
+      ],
+      "title": "Location Information"
+    },
+    {
+      "questions": [
+        "overallElevationCondition",
+        "dwellingType",
+        "yearBuilt",
+        "typeOfFoundation",
+        "primaryConstruction",
+        "numberOfStories",
+        "livingArea",
+        "lotSize",
+        "siding",
+        "hvac",
+        "numberOfHVACSystems",
+        "hvacSerialNumbers",
+        "guttersAndDownspout",
+        "fuelTank",
+        "sidingDamage",
+        "peelingPaint",
+        "mildewMoss",
+        "windowDamage",
+        "foundationCracks",
+        "wallCracks",
+        "chimneyDamage",
+        "waterDamage",
+        "underRenovation",
+        "mainBreakerPanel",
+        "waterSpicketDamage",
+        "doorDamage"
+      ],
+      "title": "Overall Elevation Condition"
+    },
+    {
+      "questions": [
+        "overallRoofCondition",
+        "roofMaterials",
+        "roofCovering",
+        "ageOfRoof",
+        "shapeOfRoof",
+        "treeLimbsOnRoof",
+        "debrisOnRoof",
+        "solarPanel",
+        "exposedFelt",
+        "missingShinglesTiles",
+        "priorRepairs",
+        "curlingShingles",
+        "algaeMoss",
+        "tarpOnRoof",
+        "brokenOrCrackedTiles",
+        "satelliteDish",
+        "unevenDecking"
+      ],
+      "title": "Overall Roof Condition"
+    },
+    {
+      "questions": [
+        "garageOutbuildingCondition",
+        "garageType",
+        "outbuilding",
+        "outbuildingType",
+        "fenceDetails",
+        "garageCondition",
+        "carportOrAwning",
+        "carportConstruction",
+        "fenceCondition"
+      ],
+      "title": "Garage/Outbuilding"
+    },
+    {
+      "questions": [
+        "boardedDoorsWindows",
+        "overgrownVegetation",
+        "abandonedVehicles",
+        "missingDamagedSteps",
+        "missingDamageRailing",
+        "sidingDamageHazard",
+        "hurricaneShutters",
+        "treeBranch",
+        "chimneyThroughRoof",
+        "fireplacePitOutside",
+        "securityBars",
+        "fasciaSoffitDamage",
+        "swimmingPool",
+        "divingBoardOrSlide",
+        "poolFenced",
+        "trampoline",
+        "swingSet",
+        "basketballGoal",
+        "dog",
+        "dogType",
+        "dogSign",
+        "skateboardOrBikeRamp",
+        "treeHouse",
+        "debrisInYard"
+      ],
+      "title": "Dwelling Hazard and Possible Hazards"
+    }
+  ]
+}
+
+
+

@@ -6,6 +6,7 @@ import 'package:safe_harbor_field_app/app/services/inspection_report_submission_
 import 'package:safe_harbor_field_app/app/services/questionaire_service.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
 import 'dart:async';
+import 'package:safe_harbor_field_app/app/models/dynamic_question_model.dart';
 
 class QuestionnaireController extends GetxController {
   final QuestionnaireService _questionnaireService = Get.put(QuestionnaireService());
@@ -32,8 +33,8 @@ class QuestionnaireController extends GetxController {
   }
 
   // Get questions and sections from service
-  List<Question> get questions => _questionnaireService.questions;
-  List<QuestionSection> get sections => _questionnaireService.sections;
+List<DynamicQuestion> get questions => _questionnaireService.dynamicStructure?.questions ?? [];
+List<DynamicQuestionSectionWithQuestions> get sections => _questionnaireService.dynamicStructure?.organizedSections ?? [];
   bool get isLoading => _questionnaireService.isLoading;
   String get error => _questionnaireService.error;
 
@@ -165,57 +166,13 @@ class QuestionnaireController extends GetxController {
     }
   }
 
-  String? validateQuestion(Question question, dynamic value) {
-    if (question.isRequired && (value == null || value.toString().trim().isEmpty)) {
+  String? validateDynamicQuestion(DynamicQuestion question, dynamic value) {
+    // All questions are required in the new structure
+    if (value == null || value.toString().trim().isEmpty) {
       fieldErrors[question.id] = true;
-      return '${question.text} is required';
+      return '${question.label} is required';
     }
-
-    // Enhanced validation using QuestionValidation
-    final validation = question.validation;
-    if (value != null && value.toString().isNotEmpty && validation != null) {
-      final valStr = value.toString();
-      // Pattern validation (e.g., zip code, email, etc.)
-      if (validation.pattern != null && !RegExp(validation.pattern!).hasMatch(valStr)) {
-        fieldErrors[question.id] = true;
-        return validation.errorMessage ?? 'Invalid format';
-      }
-      // Min/Max length
-      if (validation.minLength != null && valStr.length < validation.minLength!) {
-        fieldErrors[question.id] = true;
-        return validation.errorMessage ?? 'Minimum length is ${validation.minLength}';
-      }
-      if (validation.maxLength != null && valStr.length > validation.maxLength!) {
-        fieldErrors[question.id] = true;
-        return validation.errorMessage ?? 'Maximum length is ${validation.maxLength}';
-      }
-      // Min/Max value (for numbers)
-      if (validation.min != null || validation.max != null) {
-        final numValue = num.tryParse(valStr);
-        if (numValue == null) {
-          fieldErrors[question.id] = true;
-          return validation.errorMessage ?? 'Invalid number';
-        }
-        if (validation.min != null && numValue < validation.min!) {
-          fieldErrors[question.id] = true;
-          return validation.errorMessage ?? 'Minimum value is ${validation.min}';
-        }
-        if (validation.max != null && numValue > validation.max!) {
-          fieldErrors[question.id] = true;
-          return validation.errorMessage ?? 'Maximum value is ${validation.max}';
-        }
-      }
-      // Type-specific validation
-      if (validation.type == 'date') {
-        try {
-          DateTime.parse(valStr);
-        } catch (e) {
-          fieldErrors[question.id] = true;
-          return validation.errorMessage ?? 'Please enter a valid date';
-        }
-      }
-    }
-
+    
     fieldErrors[question.id] = false;
     return null;
   }
@@ -223,24 +180,12 @@ class QuestionnaireController extends GetxController {
   void validateForm() {
     bool isValid = true;
 
-    // Only validate required questions for form validity
+    // All questions are required in new structure
     for (final question in questions) {
-      if (question.isRequired) {
-        final value = formData[question.id];
-        if (value == null || value.toString().trim().isEmpty) {
-          isValid = false;
-          break;
-        }
-      }
-      
-      // Check validation for answered questions only (don't fail on empty optional questions)
       final value = formData[question.id];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        final error = validateQuestion(question, value);
-        if (error != null) {
-          isValid = false;
-          break;
-        }
+      if (value == null || value.toString().trim().isEmpty) {
+        isValid = false;
+        break;
       }
     }
 
@@ -369,49 +314,6 @@ class QuestionnaireController extends GetxController {
     };
   }
 
-  // // Show options after successful submission
-  // void _showReportOptions() {
-  //   Get.dialog(
-  //     AlertDialog(
-  //       title: const Text('What would you like to do next?'),
-  //       content: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           ListTile(
-  //             leading: const Icon(Icons.description),
-  //             title: const Text('View Report'),
-  //             onTap: () {
-  //               Get.back();
-  //               viewSubmittedReport();
-  //             },
-  //           ),
-  //           ListTile(
-  //             leading: const Icon(Icons.add_circle_outline),
-  //             title: const Text('Start New Report'),
-  //             onTap: () {
-  //               Get.back();
-  //               startNewReport();
-  //             },
-  //           ),
-  //           ListTile(
-  //             leading: const Icon(Icons.list),
-  //             title: const Text('View All Reports'),
-  //             onTap: () {
-  //               Get.back();
-  //               viewAllReports();
-  //             },
-  //           ),
-  //         ],
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Get.back(),
-  //           child: const Text('Close'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   // View the submitted report
   void viewSubmittedReport() {
@@ -424,16 +326,32 @@ class QuestionnaireController extends GetxController {
   }
 
   // Start a new report
-  void startNewReport() {
-    resetForm();
-    Get.snackbar(
-      'New Report',
-      'Ready to start a new inspection report',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Get.theme.colorScheme.primary,
-      colorText: Get.theme.colorScheme.onPrimary,
-    );
+void loadDynamicFormData() {
+  final structure = _questionnaireService.dynamicStructure;
+  if (structure == null) {
+    print('[ERROR] Dynamic structure not loaded');
+    return;
   }
+
+  formData.assignAll({
+    for (var question in structure.questions)
+      question.id: null, // Initialize with null, will be filled by user
+  });
+
+  _initializeSectionStates();
+  print('[INFO] Loaded dynamic form data');
+}
+
+void startNewReport() {
+  resetForm();
+  Get.snackbar(
+    'New Report',
+    'Ready to start a new inspection report',
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: Get.theme.colorScheme.primary,
+    colorText: Get.theme.colorScheme.onPrimary,
+  );
+}
 
   // View all reports
   void viewAllReports() {

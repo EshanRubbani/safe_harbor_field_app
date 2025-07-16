@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:safe_harbor_field_app/app/models/dynamic_question_model.dart';
 import 'package:safe_harbor_field_app/app/utils/date_input_widget.dart';
 import 'package:safe_harbor_field_app/app/utils/drop_down_widget.dart';
 import 'package:safe_harbor_field_app/app/utils/radio_button_widget.dart';
@@ -243,6 +246,9 @@ class QuestionSection {
 }
 
 class QuestionnaireService extends GetxService {
+  final Rxn<DynamicQuestionnaireStructure> _dynamicStructure = Rxn<DynamicQuestionnaireStructure>();
+
+  DynamicQuestionnaireStructure? get dynamicStructure => _dynamicStructure.value;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'questionnaire_questions';
 
@@ -267,7 +273,7 @@ class QuestionnaireService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    loadQuestions();
+    loadDynamicStructure();
   }
 
   @override
@@ -275,6 +281,40 @@ class QuestionnaireService extends GetxService {
     _questions.clear();
     _sections.clear();
     super.onClose();
+  }
+
+  /// Load dynamic questionnaire structure from Firestore
+  Future<void> loadDynamicStructure() async {
+    try {
+      _isLoading.value = true;
+      _error.value = '';
+
+      // Load from Firestore instead of assets
+      final DocumentSnapshot doc = await _firestore
+          .collection('questions')
+          .doc('inspection-questions')
+          .get();
+
+      if (doc.exists) {
+        final dynamicMap = doc.data() as Map<String, dynamic>;
+        // Parse the JSON into the dynamic questionnaire structure
+        _dynamicStructure.value = DynamicQuestionnaireStructure.fromJson(dynamicMap);
+      } else {
+        throw Exception('Questionnaire structure not found in Firestore');
+      }
+
+    } catch (e) {
+      _error.value = 'Failed to load dynamic structure: ${e.toString()}';
+      Get.snackbar(
+        'Error',
+        _error.value,
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Get.theme.colorScheme.error,
+        colorText: Get.theme.colorScheme.onError,
+      );
+    } finally {
+      _isLoading.value = false;
+    }
   }
 
   Future<void> loadQuestions() async {
@@ -544,9 +584,9 @@ class QuestionnaireService extends GetxService {
     return true;
   }
 
-  // Widget generation method
-  Widget getWidgetForQuestion(
-    Question question, {
+  // Widget generation method for dynamic questions
+  Widget getWidgetForDynamicQuestion(
+    DynamicQuestion question, {
     String? currentValue,
     Function(String?)? onChanged,
     String? Function(String?)? validator,
@@ -554,65 +594,61 @@ class QuestionnaireService extends GetxService {
     bool hasError = false,
     bool viewOnly = false,
   }) {
-    final label = labelPrefix + question.text;
-    switch (question.type) {
-      case QuestionType.text:
+    final label = labelPrefix + question.label;
+    switch (question.questionType) {
+      case DynamicQuestionType.text:
         return TextInputWidget(
           label: label,
           initialValue: currentValue,
-          hintText:
-              question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
-          isRequired: question.isRequired,
+          hintText: 'Enter ${question.label.toLowerCase()}',
+          isRequired: true, // All questions are required based on your description
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
           enabled: !viewOnly,
         );
-      case QuestionType.longText:
+      case DynamicQuestionType.longText:
         return TextInputWidget(
           label: label,
           initialValue: currentValue,
-          hintText:
-              question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
-          isRequired: question.isRequired,
+          hintText: 'Enter ${question.label.toLowerCase()}',
+          isRequired: true,
           maxLines: 3,
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
           enabled: !viewOnly,
         );
-      case QuestionType.number:
+      case DynamicQuestionType.number:
         return TextInputWidget(
           label: label,
           initialValue: currentValue,
-          hintText:
-              question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
-          isRequired: question.isRequired,
+          hintText: 'Enter ${question.label.toLowerCase()}',
+          isRequired: true,
           keyboardType: TextInputType.number,
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
           enabled: !viewOnly,
         );
-      case QuestionType.dropdown:
+      case DynamicQuestionType.dropdown:
         return DropdownWidget(
           label: label,
           value: currentValue,
-          items: question.options ?? [],
-          hintText:
-              question.placeholder ?? 'Select ${question.text.toLowerCase()}',
-          isRequired: question.isRequired,
+          items: question.effectiveOptions,
+          hintText: 'Select ${question.label.toLowerCase()}',
+          isRequired: true,
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
           enabled: !viewOnly,
         );
-      case QuestionType.date:
+      case DynamicQuestionType.date:
         return DateInputWidget(
           label: label,
           initialDate:
               currentValue != null ? DateTime.tryParse(currentValue) : null,
-          isRequired: question.isRequired,
+          isRequired: true,
           onChanged: viewOnly ? null : (date) => onChanged?.call(date?.toIso8601String()),
           validator: (date) => validator?.call(date?.toIso8601String()),
           firstDate: DateTime(2020),
@@ -620,23 +656,35 @@ class QuestionnaireService extends GetxService {
           hasError: hasError,
           enabled: !viewOnly,
         );
-      case QuestionType.multipleChoice:
+      case DynamicQuestionType.radio:
         return RadioButtonWidget(
           label: label,
-          options: question.options ?? [],
+          options: question.effectiveOptions,
           selectedValue: currentValue,
-          isRequired: question.isRequired,
+          isRequired: true,
+          onChanged: viewOnly ? null : onChanged,
+          validator: validator,
+          hasError: hasError,
+          enabled: !viewOnly,
+          hasOther: question.hasOtherOption,
+        );
+      case DynamicQuestionType.yesNo:
+        return RadioButtonWidget(
+          label: label,
+          options: const ['Yes', 'No'],
+          selectedValue: currentValue,
+          isRequired: true,
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
           enabled: !viewOnly,
         );
-      case QuestionType.yesNo:
+      case DynamicQuestionType.yesNoUnknown:
         return RadioButtonWidget(
           label: label,
-          options: const ['Yes', 'No'],
+          options: const ['Yes', 'No', 'Unknown'],
           selectedValue: currentValue,
-          isRequired: question.isRequired,
+          isRequired: true,
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
@@ -646,9 +694,8 @@ class QuestionnaireService extends GetxService {
         return TextInputWidget(
           label: label,
           initialValue: currentValue,
-          hintText:
-              question.placeholder ?? 'Enter ${question.text.toLowerCase()}',
-          isRequired: question.isRequired,
+          hintText: 'Enter ${question.label.toLowerCase()}',
+          isRequired: true,
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
