@@ -246,9 +246,11 @@ class QuestionSection {
 }
 
 class QuestionnaireService extends GetxService {
-  final Rxn<DynamicQuestionnaireStructure> _dynamicStructure = Rxn<DynamicQuestionnaireStructure>();
+  final Rxn<DynamicQuestionnaireStructure> _dynamicStructure =
+      Rxn<DynamicQuestionnaireStructure>();
 
-  DynamicQuestionnaireStructure? get dynamicStructure => _dynamicStructure.value;
+  DynamicQuestionnaireStructure? get dynamicStructure =>
+      _dynamicStructure.value;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'questionnaire_questions';
 
@@ -298,11 +300,11 @@ class QuestionnaireService extends GetxService {
       if (doc.exists) {
         final dynamicMap = doc.data() as Map<String, dynamic>;
         // Parse the JSON into the dynamic questionnaire structure
-        _dynamicStructure.value = DynamicQuestionnaireStructure.fromJson(dynamicMap);
+        _dynamicStructure.value =
+            DynamicQuestionnaireStructure.fromJson(dynamicMap);
       } else {
         throw Exception('Questionnaire structure not found in Firestore');
       }
-
     } catch (e) {
       _error.value = 'Failed to load dynamic structure: ${e.toString()}';
       Get.snackbar(
@@ -543,7 +545,7 @@ class QuestionnaireService extends GetxService {
   Question? getQuestionById(String questionId) {
     return _questions.firstWhereOrNull((q) => q.id == questionId);
   }
-  
+
   // Helper method to get dynamic question by ID
   DynamicQuestion? getDynamicQuestionById(String questionId) {
     return _dynamicStructure.value?.getQuestionById(questionId);
@@ -598,6 +600,7 @@ class QuestionnaireService extends GetxService {
     String labelPrefix = '',
     bool hasError = false,
     bool viewOnly = false,
+    required Null Function(dynamic otherValue) onOtherChanged,
   }) {
     final label = labelPrefix + question.label;
     switch (question.questionType) {
@@ -606,7 +609,8 @@ class QuestionnaireService extends GetxService {
           label: label,
           initialValue: currentValue,
           hintText: 'Enter ${question.label.toLowerCase()}',
-          isRequired: true, // All questions are required based on your description
+          isRequired:
+              true, // All questions are required based on your description
           onChanged: viewOnly ? null : onChanged,
           validator: validator,
           hasError: hasError,
@@ -654,7 +658,9 @@ class QuestionnaireService extends GetxService {
           initialDate:
               currentValue != null ? DateTime.tryParse(currentValue) : null,
           isRequired: true,
-          onChanged: viewOnly ? null : (date) => onChanged?.call(date?.toIso8601String()),
+          onChanged: viewOnly
+              ? null
+              : (date) => onChanged?.call(date?.toIso8601String()),
           validator: (date) => validator?.call(date?.toIso8601String()),
           firstDate: DateTime(2020),
           lastDate: DateTime.now().add(const Duration(days: 365)),
@@ -662,16 +668,44 @@ class QuestionnaireService extends GetxService {
           enabled: !viewOnly,
         );
       case DynamicQuestionType.radio:
+        // Determine the current "Other" text value
+        String? otherTextValue;
+        String? displayValue = currentValue;
+        
+        if (question.hasOtherOption && currentValue != null) {
+          // If current value is not in the predefined options, it's a custom "Other" value
+          if (!question.effectiveOptions.contains(currentValue)) {
+            otherTextValue = currentValue;
+            displayValue = 'Other';
+          }
+        }
+        
         return RadioButtonWidget(
           label: label,
           options: question.effectiveOptions,
-          selectedValue: currentValue,
+          selectedValue: displayValue,
           isRequired: true,
-          onChanged: viewOnly ? null : onChanged,
+          onChanged: viewOnly ? null : (value) {
+            if (value == 'Other') {
+              // When "Other" is selected, don't change the form value yet
+              // The form value will be updated when user types in the text field
+              onChanged?.call(value);
+            } else {
+              // For regular options, update normally
+              onChanged?.call(value);
+            }
+          },
           validator: validator,
           hasError: hasError,
           enabled: !viewOnly,
           hasOther: question.hasOtherOption,
+          otherValue: otherTextValue,
+          onOtherChanged: viewOnly ? null : (otherValue) {
+            // Only call onChanged if there's actually a value
+            if (otherValue.trim().isNotEmpty) {
+              onChanged?.call(otherValue);
+            }
+          },
         );
       case DynamicQuestionType.yesNo:
         return RadioButtonWidget(

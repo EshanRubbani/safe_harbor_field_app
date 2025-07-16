@@ -188,9 +188,14 @@ class InspectionQuestionnaireView extends StatelessWidget {
                                               currentValue: controller
                                                   .getFormValue(question.id)
                                                   ?.toString(),
-                                              onChanged: (value) =>
-                                                  controller.updateFormData(
-                                                      question.id, value),
+                                              onChanged: (value) {
+                                                controller.updateFormData(
+                                                    question.id, value);
+                                              },
+                                              onOtherChanged: (otherValue) {
+                                                controller.updateFormData(
+                                                    question.id, otherValue);
+                                              },
                                               validator: (value) => controller
                                                   .validateDynamicQuestion(
                                                       question, value),

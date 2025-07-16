@@ -113,6 +113,20 @@ List<DynamicQuestionSectionWithQuestions> get sections => _questionnaireService.
     print('[UpdateForm] Question $questionId updated with value: $value');
     print('[UpdateForm] Form valid: ${isFormValid.value}, Answered: $answeredQuestions/$totalQuestions');
   }
+  
+  // Update form data for "Other" option with the actual text value
+  void updateOtherFormData(String questionId, String otherValue) {
+    if (otherValue.isNotEmpty) {
+      formData[questionId] = otherValue;
+      fieldErrors[questionId] = false;
+      
+      // Immediately validate the form to update button state
+      validateForm();
+      
+      print('[UpdateForm] Question $questionId updated with other value: $otherValue');
+      print('[UpdateForm] Form valid: ${isFormValid.value}, Answered: $answeredQuestions/$totalQuestions');
+    }
+  }
 
   // Get current value for a question
   dynamic getFormValue(String questionId) {

@@ -36,16 +36,43 @@ class RadioButtonWidget extends StatefulWidget {
 
 class _RadioButtonWidgetState extends State<RadioButtonWidget> {
   late TextEditingController _otherController;
+  late FocusNode _otherFocusNode;
+  String? _previousOtherValue;
 
   @override
   void initState() {
     super.initState();
     _otherController = TextEditingController(text: widget.otherValue);
+    _otherFocusNode = FocusNode();
+    _previousOtherValue = widget.otherValue;
+  }
+
+  @override
+  void didUpdateWidget(RadioButtonWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Only update the controller if the value actually changed from outside
+    if (widget.otherValue != _previousOtherValue && 
+        widget.otherValue != _otherController.text) {
+      _otherController.text = widget.otherValue ?? '';
+      _previousOtherValue = widget.otherValue;
+    }
+    
+    // Maintain focus when the widget rebuilds if "Other" is still selected
+    if (widget.selectedValue == 'Other' && oldWidget.selectedValue != 'Other') {
+      // Focus the text field when "Other" is newly selected
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _otherFocusNode.requestFocus();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _otherController.dispose();
+    _otherFocusNode.dispose();
     super.dispose();
   }
 
@@ -54,9 +81,10 @@ class _RadioButtonWidgetState extends State<RadioButtonWidget> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Create the effective options list including "Other" if hasOther is true
+    // Create the effective options list
+    // Only add "Other" if hasOther is true AND "Other" is not already in the options
     final effectiveOptions = List<String>.from(widget.options);
-    if (widget.hasOther) {
+    if (widget.hasOther && !effectiveOptions.contains('Other')) {
       effectiveOptions.add('Other');
     }
 
@@ -121,10 +149,16 @@ class _RadioButtonWidgetState extends State<RadioButtonWidget> {
             Padding(
               padding: const EdgeInsets.only(top: 12.0),
               child: TextFormField(
+                key: ValueKey('other_field_${widget.label}'),
                 controller: _otherController,
+                focusNode: _otherFocusNode,
                 enabled: widget.enabled,
                 onChanged: (value) {
-                  widget.onOtherChanged?.call(value);
+                  // Prevent unnecessary rebuilds by checking if value actually changed
+                  if (value != _previousOtherValue) {
+                    _previousOtherValue = value;
+                    widget.onOtherChanged?.call(value);
+                  }
                 },
                 decoration: InputDecoration(
                   labelText: 'Please specify',
