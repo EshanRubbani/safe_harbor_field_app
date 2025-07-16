@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:open_file/open_file.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_reports_controller.dart';
 import 'package:safe_harbor_field_app/app/models/inspection_report_model.dart';
@@ -416,8 +417,8 @@ class InspectionReportView extends StatelessWidget {
     if (completionTag == 'Synced') {
       return ElevatedButton.icon(
         onPressed: () async {
-          // Generate PDF for the corresponding report
-          final pdfService = Get.find<PdfGenerationService>();
+          // Generate PDF for the corresponding report using dynamic PDF generation
+          final reportsController = Get.find<InspectionReportsController>();
           
           // Show loading dialog
           Get.dialog(
@@ -430,13 +431,11 @@ class InspectionReportView extends StatelessWidget {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Obx(() => Text(
-                    pdfService.generationStatus.isEmpty 
-                        ? 'Generating PDF...' 
-                        : pdfService.generationStatus,
-                    style: const TextStyle(fontSize: 14),
+                  const Text(
+                    'Generating PDF...',
+                    style: TextStyle(fontSize: 14),
                     textAlign: TextAlign.center,
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -444,17 +443,34 @@ class InspectionReportView extends StatelessWidget {
           );
           
           try {
-            final pdfPath = await pdfService.generatePdfFromReportId(report.id);
+            final pdfPath = await reportsController.generateDynamicPDF(report.id);
             Get.back(); // Close loading dialog
             
             if (pdfPath != null) {
               Get.snackbar(
                 'PDF Generated',
-                'PDF saved to downloads and opened automatically!',
+                'PDF saved to downloads successfully!',
                 snackPosition: SnackPosition.TOP,
                 backgroundColor: Colors.green,
                 colorText: Colors.white,
               );
+              
+              // Try to open the PDF
+              try {
+                final result = await OpenFile.open(pdfPath);
+                if (result.type != ResultType.done) {
+                  Get.snackbar(
+                    'PDF Ready',
+                    'PDF saved to app documents. You can find it in your file manager.',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.blue,
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
+                  );
+                }
+              } catch (e) {
+                print('Error opening PDF: $e');
+              }
             } else {
               Get.snackbar(
                 'Error',

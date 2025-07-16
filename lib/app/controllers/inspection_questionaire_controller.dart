@@ -383,15 +383,21 @@ void startNewReport() {
     // Ensure consistent data structure for all question types
     formData.forEach((questionId, value) {
       if (questionId != null && value != null) {
-        final question = _questionnaireService.getQuestionById(questionId);
+        final question = _questionnaireService.getDynamicQuestionById(questionId);
         if (question != null) {
-          // Create a field key based on question text for better extraction
-          final fieldKey = _convertQuestionToFieldKey(question.text);
+          // Get the section from the organized sections
+          String sectionName = 'General';
+          for (final section in sections) {
+            if (section.questions.any((q) => q.id == questionId)) {
+              sectionName = section.title;
+              break;
+            }
+          }
           
           // Structure data based on question type for consistency
           dynamic processedValue;
-          switch (question.type) {
-            case QuestionType.date:
+          switch (question.questionType) {
+            case DynamicQuestionType.date:
               // Ensure date is stored as ISO string
               if (value is DateTime) {
                 processedValue = value.toIso8601String();
@@ -406,7 +412,7 @@ void startNewReport() {
                 processedValue = value;
               }
               break;
-            case QuestionType.number:
+            case DynamicQuestionType.number:
               // Ensure numbers are stored as strings for consistency
               if (value is num) {
                 processedValue = value.toString();
@@ -414,24 +420,25 @@ void startNewReport() {
                 processedValue = value.toString();
               }
               break;
-            case QuestionType.yesNo:
-            case QuestionType.multipleChoice:
-            case QuestionType.dropdown:
-            case QuestionType.text:
-            case QuestionType.longText:
+            case DynamicQuestionType.yesNo:
+            case DynamicQuestionType.yesNoUnknown:
+            case DynamicQuestionType.radio:
+            case DynamicQuestionType.dropdown:
+            case DynamicQuestionType.text:
+            case DynamicQuestionType.longText:
             default:
               // Store as string for consistency
               processedValue = value.toString();
               break;
           }
           
-          // Store with both field key and enhanced metadata
-          structuredData[fieldKey] = {
+          // Store with question ID as key and enhanced metadata
+          structuredData[questionId] = {
             'value': processedValue,
             'question_id': questionId,
-            'question_text': question.text,
-            'question_type': question.type.toString().split('.').last,
-            'section': question.section ?? 'General'
+            'question_text': question.label,
+            'question_type': question.type,
+            'section': sectionName
           };
         } else {
           // If question not found, store with fallback structure

@@ -91,6 +91,18 @@ class DynamicPDFGenerationService extends GetxService {
     return pdf.save();
   }
 
+  /// Generate PDF from inspection report model
+  Future<Uint8List> generatePDFFromInspectionReport({
+    required InspectionReportModel report,
+    String? summary,
+  }) async {
+    return generateDynamicPDF(
+      questionnaireResponses: report.questionnaireResponses,
+      imageUrlsByCategory: report.images,
+      summary: summary ?? 'Inspection completed successfully.',
+    );
+  }
+
   /// Extract basic information from questionnaire responses
   Map<String, String> _extractBasicInfo(Map<String, dynamic> responses) {
     final basicInfo = <String, String>{};

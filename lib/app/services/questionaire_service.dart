@@ -543,6 +543,11 @@ class QuestionnaireService extends GetxService {
   Question? getQuestionById(String questionId) {
     return _questions.firstWhereOrNull((q) => q.id == questionId);
   }
+  
+  // Helper method to get dynamic question by ID
+  DynamicQuestion? getDynamicQuestionById(String questionId) {
+    return _dynamicStructure.value?.getQuestionById(questionId);
+  }
 
   List<Question> getQuestionsBySection(String section) {
     return _questions.where((q) => q.section == section).toList();

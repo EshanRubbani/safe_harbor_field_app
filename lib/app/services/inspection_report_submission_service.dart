@@ -259,32 +259,4 @@ class InspectionReportService extends GetxService {
     }
   }
 
-  // // Update inspection report
-  // Future<bool> updateInspectionReport(
-  //   String reportId,
-  //   Map<String, dynamic> updatedData,
-  // ) async {
-  //   try {
-  //     await _firestore.collection(_collection).doc(reportId).update({
-  //       ...updatedData,
-  //       'updated_at': FieldValue.serverTimestamp(),
-  //     });
-  //     return true;
-  //   } catch (e) {
-  //     _error.value = 'Failed to update inspection report: ${e.toString()}';
-  //     return false;
-  //   }
-  // }
-
-  // // Delete inspection report
-  // Future<bool> deleteInspectionReport(String reportId) async {
-  //   try {
-  //     await _firestore.collection(_collection).doc(reportId).delete();
-  //     return true;
-  //   } catch (e) {
-  //     _error.value = 'Failed to delete inspection report: ${e.toString()}';
-  //     return false;
-  //   }
-  // }
-
 }
