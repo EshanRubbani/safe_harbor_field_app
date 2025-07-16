@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_photos_controller.dart';
 import 'package:safe_harbor_field_app/app/controllers/inspection_questionaire_controller.dart';
 import 'package:safe_harbor_field_app/app/controllers/pdf_template_controller.dart';
+import 'package:safe_harbor_field_app/app/services/dynamic_pdf_generation_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/controllers/auth_controller.dart';
 import 'app/themes/app_theme.dart';
@@ -20,30 +21,26 @@ import 'app/services/pdf_generation_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  
+
   await Get.putAsync(() => SharedPreferences.getInstance());
-  
-  
+
   Get.put(ThemeController(), permanent: true);
   Get.put(InspectionPhotosController(), permanent: true);
   Get.put(QuestionnaireController(), permanent: true);
   Get.put(InspectionReportsController(), permanent: true);
   Get.put(QuestionnaireService(), permanent: true);
   Get.put(InspectionReportService(), permanent: true);
-  Get.put(InspectionPDFController(), permanent: true);
-  Get.put(PdfGenerationService(), permanent: true);
-  
+  // Get.put(InspectionPDFController(), permanent: true);
+  Get.put(DynamicPDFGenerationService(), permanent: true);
+
   // Initialize AuthController last to prevent premature navigation
   Get.put(AuthController(), permanent: true);
 
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

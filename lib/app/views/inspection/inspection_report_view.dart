@@ -15,7 +15,8 @@ class InspectionReportView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final InspectionReportsController reportsController = Get.find<InspectionReportsController>();
+    final InspectionReportsController reportsController =
+        Get.find<InspectionReportsController>();
     final userId = Get.find<AuthController>().user?.uid ?? '';
 
     // Fetch cloud reports on first build
@@ -25,8 +26,7 @@ class InspectionReportView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-
-       appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -39,28 +39,33 @@ class InspectionReportView extends StatelessWidget {
             return Container(
               margin: const EdgeInsets.only(right: 16),
               child: ElevatedButton.icon(
-                onPressed: isLoading ? null : () {
-                  reportsController.loadLocalReports();
-                  reportsController.fetchCloudReports();
-                },
-                icon: isLoading 
+                onPressed: isLoading
+                    ? null
+                    : () {
+                        reportsController.loadLocalReports();
+                        reportsController.fetchCloudReports();
+                      },
+                icon: isLoading
                     ? SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const Icon(Icons.sync_rounded, size: 16),
                 label: Text(
                   isLoading ? 'Refreshing...' : 'Refresh',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w500),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4285F4),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -85,7 +90,10 @@ class InspectionReportView extends StatelessWidget {
 
           return ListView.builder(
             padding: const EdgeInsets.only(top: 0, bottom: 16),
-            itemCount: allReports.isEmpty ? 2 : allReports.length + 2, // 0: header, 1: subtitle, rest: reports
+            itemCount: allReports.isEmpty
+                ? 2
+                : allReports.length +
+                    2, // 0: header, 1: subtitle, rest: reports
             itemBuilder: (context, index) {
               if (index == 0) {
                 // Header card
@@ -141,15 +149,20 @@ class InspectionReportView extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
               }
-              if (reportIndex >= allReports.length) return const SizedBox.shrink();
+              if (reportIndex >= allReports.length)
+                return const SizedBox.shrink();
               final report = allReports[reportIndex];
               // Get the total questions from the questionnaire controller
-              final questionnaireController = Get.find<QuestionnaireController>();
+              final questionnaireController =
+                  Get.find<QuestionnaireController>();
               final totalQuestions = questionnaireController.totalQuestions;
-              final completionTag = report.completionTag(totalQuestions: totalQuestions);
-              final completionStats = report.completionStats(totalQuestions: totalQuestions);
+              final completionTag =
+                  report.completionTag(totalQuestions: totalQuestions);
+              final completionStats =
+                  report.completionStats(totalQuestions: totalQuestions);
               return Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, reportIndex == allReports.length - 1 ? 20 : 0),
+                padding: EdgeInsets.fromLTRB(
+                    20, 0, 20, reportIndex == allReports.length - 1 ? 20 : 0),
                 child: _buildReportCard(
                   report: report,
                   completionTag: completionTag,
@@ -267,11 +280,11 @@ class InspectionReportView extends StatelessWidget {
     final responses = report.questionnaireResponses;
     final address = _extractAddress(responses, report.id);
     final policyNumber = _extractPolicyNumber(responses);
-    
+
     Color tagColor;
     Color tagBackgroundColor;
     IconData tagIcon;
-    
+
     switch (completionTag) {
       case 'Synced':
         tagColor = const Color(0xFF059669);
@@ -289,7 +302,7 @@ class InspectionReportView extends StatelessWidget {
         tagBackgroundColor = const Color(0xFFFEE2E2);
         tagIcon = Icons.warning_rounded;
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -364,7 +377,8 @@ class InspectionReportView extends StatelessWidget {
                 ),
                 // Status badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: tagBackgroundColor,
                     borderRadius: BorderRadius.circular(6),
@@ -379,7 +393,9 @@ class InspectionReportView extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        completionTag == 'Completed' ? 'Pending' : completionTag,
+                        completionTag == 'Completed'
+                            ? 'Pending'
+                            : completionTag,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -391,9 +407,9 @@ class InspectionReportView extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Action button
             SizedBox(
               width: double.infinity,
@@ -408,7 +424,7 @@ class InspectionReportView extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildActionButton({
     required InspectionReportModel report,
     required String completionTag,
@@ -419,7 +435,7 @@ class InspectionReportView extends StatelessWidget {
         onPressed: () async {
           // Generate PDF for the corresponding report using dynamic PDF generation
           final reportsController = Get.find<InspectionReportsController>();
-          
+
           // Show loading dialog
           Get.dialog(
             AlertDialog(
@@ -441,11 +457,12 @@ class InspectionReportView extends StatelessWidget {
             ),
             barrierDismissible: false,
           );
-          
+
           try {
-            final pdfPath = await reportsController.generateDynamicPDF(report.id);
+            final pdfPath =
+                await reportsController.generateDynamicPDF(report.id);
             Get.back(); // Close loading dialog
-            
+
             if (pdfPath != null) {
               Get.snackbar(
                 'PDF Generated',
@@ -454,7 +471,7 @@ class InspectionReportView extends StatelessWidget {
                 backgroundColor: Colors.green,
                 colorText: Colors.white,
               );
-              
+
               // Try to open the PDF
               try {
                 final result = await OpenFile.open(pdfPath);
@@ -596,8 +613,9 @@ class InspectionReportView extends StatelessWidget {
       );
     }
   }
-  
-  void _showDeleteConfirmation(String reportId, InspectionReportsController reportsController) {
+
+  void _showDeleteConfirmation(
+      String reportId, InspectionReportsController reportsController) {
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(
@@ -656,25 +674,21 @@ class InspectionReportView extends StatelessWidget {
       ),
     );
   }
-  
+
   String _extractAddress(Map<String, dynamic> responses, String reportId) {
     // Extract Insured Street Address, State, and Zip Code from questionnaire
     // Support both enhanced structure and legacy structure
     final streetAddressFields = [
       'insured_street_address',
-      'street_address', 
+      'street_address',
       'property_address',
       'insured_address',
       'address',
       'street'
     ];
-    
-    final stateFields = [
-      'insured_state',
-      'state',
-      'property_state'
-    ];
-    
+
+    final stateFields = ['insured_state', 'state', 'property_state'];
+
     final zipFields = [
       'insured_zip_code',
       'zip_code',
@@ -682,18 +696,19 @@ class InspectionReportView extends StatelessWidget {
       'insured_zip',
       'zip'
     ];
-    
+
     String? streetAddress;
     String? state;
     String? zipCode;
-    
+
     // Helper function to extract value from enhanced or legacy structure
     String? extractValue(Map<String, dynamic> data, List<String> fieldKeys) {
       for (final field in fieldKeys) {
         // Check enhanced structure first
         final enhancedValue = data[field];
         if (enhancedValue != null) {
-          if (enhancedValue is Map<String, dynamic> && enhancedValue.containsKey('value')) {
+          if (enhancedValue is Map<String, dynamic> &&
+              enhancedValue.containsKey('value')) {
             final value = enhancedValue['value'];
             if (value != null && value.toString().trim().isNotEmpty) {
               return value.toString().trim();
@@ -704,18 +719,20 @@ class InspectionReportView extends StatelessWidget {
           }
         }
       }
-      
+
       // Also search by question text patterns for additional fallback
       for (final entry in data.entries) {
         final key = entry.key.toLowerCase();
         final value = entry.value;
-        
+
         // Check if this looks like an address field based on key patterns
         for (final fieldKey in fieldKeys) {
-          if (key.contains(fieldKey.replaceAll('_', ' ')) || key.contains(fieldKey)) {
+          if (key.contains(fieldKey.replaceAll('_', ' ')) ||
+              key.contains(fieldKey)) {
             if (value is Map<String, dynamic> && value.containsKey('value')) {
               final extractedValue = value['value'];
-              if (extractedValue != null && extractedValue.toString().trim().isNotEmpty) {
+              if (extractedValue != null &&
+                  extractedValue.toString().trim().isNotEmpty) {
                 return extractedValue.toString().trim();
               }
             } else if (value != null && value.toString().trim().isNotEmpty) {
@@ -724,30 +741,30 @@ class InspectionReportView extends StatelessWidget {
           }
         }
       }
-      
+
       return null;
     }
-    
+
     // Extract address components
     streetAddress = extractValue(responses, streetAddressFields);
     state = extractValue(responses, stateFields);
     zipCode = extractValue(responses, zipFields);
-    
+
     // Build address string
     final addressParts = <String>[];
     if (streetAddress != null) addressParts.add(streetAddress);
     if (state != null) addressParts.add(state);
     if (zipCode != null) addressParts.add(zipCode);
-    
+
     // If we have address components, join them
     if (addressParts.isNotEmpty) {
       return addressParts.join(', ');
     }
-    
+
     // Fallback to report ID if no address found
     return 'Report ${reportId.split('_').last}';
   }
-  
+
   String _extractPolicyNumber(Map<String, dynamic> responses) {
     final policyFields = [
       'policy_number',
@@ -756,14 +773,15 @@ class InspectionReportView extends StatelessWidget {
       'policy_num',
       'policy'
     ];
-    
+
     // Helper function to extract value from enhanced or legacy structure
     String? extractValue(Map<String, dynamic> data, List<String> fieldKeys) {
       for (final field in fieldKeys) {
         // Check enhanced structure first
         final enhancedValue = data[field];
         if (enhancedValue != null) {
-          if (enhancedValue is Map<String, dynamic> && enhancedValue.containsKey('value')) {
+          if (enhancedValue is Map<String, dynamic> &&
+              enhancedValue.containsKey('value')) {
             final value = enhancedValue['value'];
             if (value != null && value.toString().trim().isNotEmpty) {
               return value.toString().trim();
@@ -774,18 +792,20 @@ class InspectionReportView extends StatelessWidget {
           }
         }
       }
-      
+
       // Also search by question text patterns for additional fallback
       for (final entry in data.entries) {
         final key = entry.key.toLowerCase();
         final value = entry.value;
-        
+
         // Check if this looks like a policy field based on key patterns
         for (final fieldKey in fieldKeys) {
-          if (key.contains(fieldKey.replaceAll('_', ' ')) || key.contains(fieldKey)) {
+          if (key.contains(fieldKey.replaceAll('_', ' ')) ||
+              key.contains(fieldKey)) {
             if (value is Map<String, dynamic> && value.containsKey('value')) {
               final extractedValue = value['value'];
-              if (extractedValue != null && extractedValue.toString().trim().isNotEmpty) {
+              if (extractedValue != null &&
+                  extractedValue.toString().trim().isNotEmpty) {
                 return extractedValue.toString().trim();
               }
             } else if (value != null && value.toString().trim().isNotEmpty) {
@@ -794,14 +814,14 @@ class InspectionReportView extends StatelessWidget {
           }
         }
       }
-      
+
       return null;
     }
-    
+
     final policyNumber = extractValue(responses, policyFields);
     return policyNumber ?? 'N/A';
   }
-  
+
   String _getDateLabel(String completionTag, DateTime date) {
     if (completionTag == 'In Progress') {
       return 'Last updated: ${_formatDate(date)}';

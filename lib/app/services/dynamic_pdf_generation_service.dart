@@ -192,11 +192,16 @@ class DynamicPDFGenerationService extends GetxService {
     required pw.Font boldFont,
   }) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(40),
+      width: double.infinity,
+      height: double.infinity,
+      decoration: pw.BoxDecoration(
+        color: PdfColors.white,
+      ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           // Logo
+
           if (_logoImage != null)
             pw.Container(
               height: 60,

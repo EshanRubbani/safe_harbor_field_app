@@ -1,3 +1,4 @@
+//old code
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
@@ -24,7 +25,9 @@ class OptimizedInspectionPDFTemplate {
 
     if (_logoImage == null) {
       try {
-        _logoImage = (await rootBundle.load('assets/safe_harbor_small.png')).buffer.asUint8List();
+        _logoImage = (await rootBundle.load('assets/safe_harbor_small.png'))
+            .buffer
+            .asUint8List();
       } catch (e) {
         print('Failed to load logo image: $e');
       }
@@ -32,7 +35,9 @@ class OptimizedInspectionPDFTemplate {
 
     if (_coverImageBytes == null) {
       try {
-        _coverImageBytes = (await rootBundle.load('assets/cover_image.png')).buffer.asUint8List();
+        _coverImageBytes = (await rootBundle.load('assets/cover_image.png'))
+            .buffer
+            .asUint8List();
       } catch (e) {
         print('Failed to load cover image: $e');
       }
@@ -115,18 +120,17 @@ class OptimizedInspectionPDFTemplate {
       final photos = section['photos'] as List<Uint8List>;
       if (photos.isNotEmpty) {
         _addOptimizedPhotoSection(
-          pdf: pdf,
-          title: section['title'] as String,
-          photos: photos,
-          clientName: clientName,
-          address: address,
-          state: state,
-          zipCode: zipCode,
-          policyNumber: policyNumber,
-          font: font,
-          boldFont: boldFont,
-          dateOfOrigin: formattedDate
-        );
+            pdf: pdf,
+            title: section['title'] as String,
+            photos: photos,
+            clientName: clientName,
+            address: address,
+            state: state,
+            zipCode: zipCode,
+            policyNumber: policyNumber,
+            font: font,
+            boldFont: boldFont,
+            dateOfOrigin: formattedDate);
       }
     }
 
@@ -244,408 +248,410 @@ class OptimizedInspectionPDFTemplate {
 
     return await pdf.save();
   }
+
   /// Build the new cover page exactly as specified
-static pw.Widget _buildNewCoverPage({
-  required String clientName,
-  required String address,
-  required String state,
-  required String zipCode,
-  required String policyNumber,
-  required String dateOfOrigin,
-  required String typeOfInspection,
-  required pw.Font font,
-  required pw.Font boldFont,
-}) {
-  String formattedDate = '';
-  try {
-    final date = DateTime.parse(dateOfOrigin);
-    formattedDate = DateFormat('MM/dd/yyyy').format(date);
-  } catch (_) {
-    formattedDate = dateOfOrigin; // fallback if parsing fails
-  }
-
-  return pw.Container(
-    width: double.infinity,
-    height: double.infinity,
-    decoration: pw.BoxDecoration(
-      color: PdfColors.white,
-    ),
-    child: pw.Column(
-      children: [
-        // Logo at the top
-        pw.Container(
-          width: double.infinity,
-          padding: pw.EdgeInsets.only(top: 30, bottom: 15),
-          child: pw.Center(
-            child: pw.Container(
-              width: 180,
-              height: 50,
-              decoration: pw.BoxDecoration(
-                image: _logoImage != null
-                    ? pw.DecorationImage(
-                        image: pw.MemoryImage(_logoImage!),
-                        fit: pw.BoxFit.contain,
-                      )
-                    : null,
-              ),
-              child: _logoImage == null
-                  ? pw.Center(
-                      child: pw.Text(
-                        'Safe Harbor',
-                        style: pw.TextStyle(
-                          font: boldFont,
-                          fontSize: 22,
-                          color: PdfColors.blue,
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-        ),
-
-        // Main title
-        pw.Container(
-          padding: pw.EdgeInsets.symmetric(vertical: 15),
-          child: pw.Text(
-            'Underwriting Inspection Report',
-            style: pw.TextStyle(
-              font: boldFont,
-              fontSize: 28,
-              color: PdfColors.black,
-            ),
-            textAlign: pw.TextAlign.center,
-          ),
-        ),
-
-        // Safe Harbor Adjusting with underline
-        pw.Container(
-          padding: pw.EdgeInsets.only(bottom: 20),
-          child: pw.Column(
-            children: [
-              pw.Text(
-                'Safe Harbor Adjusting',
-                style: pw.TextStyle(
-                  font: boldFont,
-                  fontSize: 18,
-                  color: PdfColors.blue,
-                ),
-                textAlign: pw.TextAlign.center,
-              ),
-              pw.Container(
-                margin: pw.EdgeInsets.only(top: 5),
-                width: 180,
-                height: 2,
-                color: PdfColors.blue,
-              ),
-            ],
-          ),
-        ),
-
-        // Center hexagonal image
-        pw.Container(
-          width: 350,
-          height: 200,
-          child: pw.ClipRRect(
-            child: pw.Image(
-              pw.MemoryImage(_coverImageBytes!),
-              fit: pw.BoxFit.contain,
-            ),
-          ),
-        ),
-
-        pw.SizedBox(height: 10),
-
-        // Address and information at the bottom
-        pw.Expanded(
-          child: pw.Container(
-            padding: pw.EdgeInsets.only(bottom: 30),
-            child: pw.Column(
-              mainAxisAlignment: pw.MainAxisAlignment.end,
-              children: [
-                pw.Text(
-                  'Address',
-                  style: pw.TextStyle(
-                    font: boldFont,
-                    fontSize: 16,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Text(
-                  address,
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 14,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  '$state, $zipCode',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 14,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.SizedBox(height: 15),
-                pw.Text(
-                  'Client Name: $clientName',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  'Project/Claim: $policyNumber',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  'Date of Origin: $formattedDate',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  'Type of Inspection: $typeOfInspection',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-/// Build the new header exactly as specified
-static pw.Widget _buildNewHeader({
-  required String clientName,
-  required String address,
-  required String state,
-  required String zipCode,
-  required String policyNumber,
-  required String dateOfOrigin,
-  required String typeOfInspection,
-  required pw.Font font,
-  required pw.Font boldFont,
-}) {
-  return pw.Container(
-    width: double.infinity,
-    height: 120,
-    decoration: pw.BoxDecoration(
-      color: PdfColors.white,
-    ),
-    child: pw.Row(
-      children: [
-        // Left side - Logo and title
-        pw.Expanded(
-          flex: 1,
-          child: pw.Container(
-            padding: pw.EdgeInsets.all(8),
-            child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-              
-                // pw.SizedBox(width: 15),
-                // Title
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  mainAxisAlignment: pw.MainAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      'Photo Report',
-                      style: pw.TextStyle(
-                        font: boldFont,
-                        fontSize: 24,
-                        color: PdfColors.black,
-                      ),
-                    ),
-                    pw.Container(
-                      margin: pw.EdgeInsets.only(top: 5),
-                      width: 150,
-                      height: 2,
-                      color: PdfColors.blue,
-                    ),
-                    pw.SizedBox(height: 5),
-                    pw.Text(
-                      'Safe Harbor Adjusting',
-                      style: pw.TextStyle(
-                        font: font,
-                        fontSize: 14,
-                        color: PdfColors.blue,
-                      ),
-                    ),
-                    pw.SizedBox(height: 5),
-
-                      // Logo
-                pw.Container(
-                  width: 60,
-                  height: 60,
-                  decoration: pw.BoxDecoration(
-                    image: _logoImage != null
-                        ? pw.DecorationImage(
-                            image: pw.MemoryImage(_logoImage!),
-                            fit: pw.BoxFit.contain,
-                          )
-                        : null,
-                  ),
-                  child: _logoImage == null
-                      ? pw.Center(
-                          child: pw.Text(
-                            'SH',
-                            style: pw.TextStyle(
-                              font: boldFont,
-                              fontSize: 16,
-                              color: PdfColors.blue,
-                            ),
-                          ),
-                        )
-                      : null,
-                ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Right side - Property info
-        pw.Expanded(
-          flex: 1,
-          child: pw.Container(
-            padding: pw.EdgeInsets.only(left:  15,right: 15),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              mainAxisAlignment: pw.MainAxisAlignment.start,
-              children: [
-                // PROPERTY INFO header with line
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      'PROPERTY INFO',
-                      style: pw.TextStyle(
-                        font: boldFont,
-                        fontSize: 14,
-                        color: PdfColors.black,
-                      ),
-                    ),
-                    pw.Container(
-                      margin: pw.EdgeInsets.only(top: 2),
-                      width: 100,
-                      height: 2,
-                      color: PdfColors.black,
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 8),
-                // Client info
-                pw.Text(
-                  clientName,
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  address,
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  '$state, $zipCode',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 12,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.SizedBox(height: 8),
-                // Second line separator
-                pw.Container(
-                  width: 100,
-                  height: 1,
-                  color: PdfColors.black,
-                ),
-                pw.SizedBox(height: 5),
-                // Additional info
-                pw.Text(
-                  'Project/Claim: $policyNumber',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 11,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  'Policy: $policyNumber',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 11,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  'Date of Origin: $dateOfOrigin',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 11,
-                    color: PdfColors.black,
-                  ),
-                ),
-                pw.Text(
-                  'Type of Inspection: $typeOfInspection',
-                  style: pw.TextStyle(
-                    font: font,
-                    fontSize: 11,
-                    color: PdfColors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-  /// Add optimized photo section with support for up to 10 images
-  static void _addOptimizedPhotoSection({
-    required pw.Document pdf,
-    required String title,
-    required List<Uint8List> photos,
+  static pw.Widget _buildNewCoverPage({
     required String clientName,
     required String address,
     required String state,
     required String zipCode,
     required String policyNumber,
+    required String dateOfOrigin,
+    required String typeOfInspection,
     required pw.Font font,
     required pw.Font boldFont,
-    required String dateOfOrigin
   }) {
+    String formattedDate = '';
+    try {
+      final date = DateTime.parse(dateOfOrigin);
+      formattedDate = DateFormat('MM/dd/yyyy').format(date);
+    } catch (_) {
+      formattedDate = dateOfOrigin; // fallback if parsing fails
+    }
+
+    return pw.Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: pw.BoxDecoration(
+        color: PdfColors.white,
+      ),
+      child: pw.Column(
+        children: [
+          // Logo at the top
+          pw.Container(
+            width: double.infinity,
+            padding: pw.EdgeInsets.only(top: 30, bottom: 15),
+            child: pw.Center(
+              child: pw.Container(
+                width: 180,
+                height: 50,
+                decoration: pw.BoxDecoration(
+                  image: _logoImage != null
+                      ? pw.DecorationImage(
+                          image: pw.MemoryImage(_logoImage!),
+                          fit: pw.BoxFit.contain,
+                        )
+                      : null,
+                ),
+                child: _logoImage == null
+                    ? pw.Center(
+                        child: pw.Text(
+                          'Safe Harbor',
+                          style: pw.TextStyle(
+                            font: boldFont,
+                            fontSize: 22,
+                            color: PdfColors.blue,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+          ),
+
+          // Main title
+          pw.Container(
+            padding: pw.EdgeInsets.symmetric(vertical: 15),
+            child: pw.Text(
+              'Underwriting Inspection Report',
+              style: pw.TextStyle(
+                font: boldFont,
+                fontSize: 28,
+                color: PdfColors.black,
+              ),
+              textAlign: pw.TextAlign.center,
+            ),
+          ),
+
+          // Safe Harbor Adjusting with underline
+          pw.Container(
+            padding: pw.EdgeInsets.only(bottom: 20),
+            child: pw.Column(
+              children: [
+                pw.Text(
+                  'Safe Harbor Adjusting',
+                  style: pw.TextStyle(
+                    font: boldFont,
+                    fontSize: 18,
+                    color: PdfColors.blue,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.Container(
+                  margin: pw.EdgeInsets.only(top: 5),
+                  width: 180,
+                  height: 2,
+                  color: PdfColors.blue,
+                ),
+              ],
+            ),
+          ),
+
+          // Center hexagonal image
+          pw.Container(
+            width: 350,
+            height: 200,
+            child: pw.ClipRRect(
+              child: pw.Image(
+                pw.MemoryImage(_coverImageBytes!),
+                fit: pw.BoxFit.contain,
+              ),
+            ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          // Address and information at the bottom
+          pw.Expanded(
+            child: pw.Container(
+              padding: pw.EdgeInsets.only(bottom: 30),
+              child: pw.Column(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    'Address',
+                    style: pw.TextStyle(
+                      font: boldFont,
+                      fontSize: 16,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    address,
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 14,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    '$state, $zipCode',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 14,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.SizedBox(height: 15),
+                  pw.Text(
+                    'Client Name: $clientName',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    'Project/Claim: $policyNumber',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    'Date of Origin: $formattedDate',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    'Type of Inspection: $typeOfInspection',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build the new header exactly as specified
+  static pw.Widget _buildNewHeader({
+    required String clientName,
+    required String address,
+    required String state,
+    required String zipCode,
+    required String policyNumber,
+    required String dateOfOrigin,
+    required String typeOfInspection,
+    required pw.Font font,
+    required pw.Font boldFont,
+  }) {
+    return pw.Container(
+      width: double.infinity,
+      height: 120,
+      decoration: pw.BoxDecoration(
+        color: PdfColors.white,
+      ),
+      child: pw.Row(
+        children: [
+          // Left side - Logo and title
+          pw.Expanded(
+            flex: 1,
+            child: pw.Container(
+              padding: pw.EdgeInsets.all(8),
+              child: pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  // pw.SizedBox(width: 15),
+                  // Title
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    mainAxisAlignment: pw.MainAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'Photo Report',
+                        style: pw.TextStyle(
+                          font: boldFont,
+                          fontSize: 24,
+                          color: PdfColors.black,
+                        ),
+                      ),
+                      pw.Container(
+                        margin: pw.EdgeInsets.only(top: 5),
+                        width: 150,
+                        height: 2,
+                        color: PdfColors.blue,
+                      ),
+                      pw.SizedBox(height: 5),
+                      pw.Text(
+                        'Safe Harbor Adjusting',
+                        style: pw.TextStyle(
+                          font: font,
+                          fontSize: 14,
+                          color: PdfColors.blue,
+                        ),
+                      ),
+                      pw.SizedBox(height: 5),
+
+                      // Logo
+                      pw.Container(
+                        width: 60,
+                        height: 60,
+                        decoration: pw.BoxDecoration(
+                          image: _logoImage != null
+                              ? pw.DecorationImage(
+                                  image: pw.MemoryImage(_logoImage!),
+                                  fit: pw.BoxFit.contain,
+                                )
+                              : null,
+                        ),
+                        child: _logoImage == null
+                            ? pw.Center(
+                                child: pw.Text(
+                                  'SH',
+                                  style: pw.TextStyle(
+                                    font: boldFont,
+                                    fontSize: 16,
+                                    color: PdfColors.blue,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Right side - Property info
+          pw.Expanded(
+            flex: 1,
+            child: pw.Container(
+              padding: pw.EdgeInsets.only(left: 15, right: 15),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                mainAxisAlignment: pw.MainAxisAlignment.start,
+                children: [
+                  // PROPERTY INFO header with line
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'PROPERTY INFO',
+                        style: pw.TextStyle(
+                          font: boldFont,
+                          fontSize: 14,
+                          color: PdfColors.black,
+                        ),
+                      ),
+                      pw.Container(
+                        margin: pw.EdgeInsets.only(top: 2),
+                        width: 100,
+                        height: 2,
+                        color: PdfColors.black,
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 8),
+                  // Client info
+                  pw.Text(
+                    clientName,
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    address,
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    '$state, $zipCode',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 12,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  // Second line separator
+                  pw.Container(
+                    width: 100,
+                    height: 1,
+                    color: PdfColors.black,
+                  ),
+                  pw.SizedBox(height: 5),
+                  // Additional info
+                  pw.Text(
+                    'Project/Claim: $policyNumber',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 11,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    'Policy: $policyNumber',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 11,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    'Date of Origin: $dateOfOrigin',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 11,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                  pw.Text(
+                    'Type of Inspection: $typeOfInspection',
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 11,
+                      color: PdfColors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Add optimized photo section with support for up to 10 images
+  static void _addOptimizedPhotoSection(
+      {required pw.Document pdf,
+      required String title,
+      required List<Uint8List> photos,
+      required String clientName,
+      required String address,
+      required String state,
+      required String zipCode,
+      required String policyNumber,
+      required pw.Font font,
+      required pw.Font boldFont,
+      required String dateOfOrigin}) {
     // Calculate number of pages needed (4 photos per page for better quality)
     const photosPerPage = 4;
-    
+
     for (int i = 0; i < photos.length; i += photosPerPage) {
-      final endIndex = (i + photosPerPage < photos.length) ? i + photosPerPage : photos.length;
+      final endIndex = (i + photosPerPage < photos.length)
+          ? i + photosPerPage
+          : photos.length;
       final pagePhotos = photos.sublist(i, endIndex);
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -659,7 +665,8 @@ static pw.Widget _buildNewHeader({
               zipCode: zipCode,
               policyNumber: policyNumber,
               font: font,
-              boldFont: boldFont, dateOfOrigin: dateOfOrigin,
+              boldFont: boldFont,
+              dateOfOrigin: dateOfOrigin,
             );
           },
         ),
@@ -690,9 +697,9 @@ static pw.Widget _buildNewHeader({
           zipCode: zipCode,
           policyNumber: policyNumber,
           font: font,
-          boldFont: boldFont, dateOfOrigin: dateOfOrigin, typeOfInspection: 'UnderWriting',
-          
-          
+          boldFont: boldFont,
+          dateOfOrigin: dateOfOrigin,
+          typeOfInspection: 'UnderWriting',
         ),
         pw.SizedBox(height: 20),
         pw.Text(
@@ -708,12 +715,13 @@ static pw.Widget _buildNewHeader({
   }
 
   /// Build optimized photo grid with 2x2 layout
-  static pw.Widget _buildOptimizedPhotoGrid(List<Uint8List> photos, pw.Font font, String sectionTitle) {
+  static pw.Widget _buildOptimizedPhotoGrid(
+      List<Uint8List> photos, pw.Font font, String sectionTitle) {
     List<pw.Widget> rows = [];
-    
+
     for (int i = 0; i < photos.length; i += 2) {
       List<pw.Widget> rowPhotos = [];
-      
+
       // Add first photo with caption
       rowPhotos.add(
         pw.Expanded(
@@ -761,7 +769,7 @@ static pw.Widget _buildNewHeader({
           ),
         ),
       );
-      
+
       // Add second photo if exists
       if (i + 1 < photos.length) {
         rowPhotos.add(
@@ -814,10 +822,10 @@ static pw.Widget _buildNewHeader({
         // Add empty space if odd number of photos
         rowPhotos.add(pw.Expanded(child: pw.Container()));
       }
-      
+
       rows.add(pw.Row(children: rowPhotos));
     }
-    
+
     return pw.Column(children: rows);
   }
 
@@ -855,7 +863,8 @@ static pw.Widget _buildNewHeader({
               _buildDetailRow('State:', state, font, boldFont),
               _buildDetailRow('Zip Code:', zipCode, font, boldFont),
               _buildDetailRow('Policy Number:', policyNumber, font, boldFont),
-              _buildDetailRow('Inspection Date:', inspectionDate, font, boldFont),
+              _buildDetailRow(
+                  'Inspection Date:', inspectionDate, font, boldFont),
               _buildDetailRow('Inspector Name:', inspectorName, font, boldFont),
             ],
           ),
@@ -898,7 +907,10 @@ static pw.Widget _buildNewHeader({
           ['RENTAL PROPERTY', overallRiskInfo.rentalProperty ? 'Yes' : 'No'],
           ['BUSINESS ON SITE', overallRiskInfo.businessOnSite ? 'Yes' : 'No'],
           ['SEASONAL HOME', overallRiskInfo.seasonalHome ? 'Yes' : 'No'],
-          ['HISTORIC PROPERTY', overallRiskInfo.historicProperty ? 'Yes' : 'No'],
+          [
+            'HISTORIC PROPERTY',
+            overallRiskInfo.historicProperty ? 'Yes' : 'No'
+          ],
           ['NEAREST DWELLING', '${overallRiskInfo.nearestDwelling} ft'],
         ], font, boldFont),
       ],
@@ -932,19 +944,34 @@ static pw.Widget _buildNewHeader({
           ['HVAC', elevationCondition.hvac],
           ['NUMBER OF SYSTEMS', '${elevationCondition.numberOfSystems}'],
           ['HVAC SERIAL #', elevationCondition.hvacSerial],
-          ['GUTTERS AND DOWNSPOUT', elevationCondition.guttersAndDownspout ? 'Yes' : 'No'],
+          [
+            'GUTTERS AND DOWNSPOUT',
+            elevationCondition.guttersAndDownspout ? 'Yes' : 'No'
+          ],
           ['FUEL TANK', elevationCondition.fuelTank ? 'Yes' : 'No'],
           ['SIDING DAMAGE', elevationCondition.sidingDamage ? 'Yes' : 'No'],
           ['PEELING PAINT', elevationCondition.peelingPaint ? 'Yes' : 'No'],
           ['MILDEW/MOSS', elevationCondition.mildewMoss ? 'Yes' : 'No'],
           ['WINDOW DAMAGE', elevationCondition.windowDamage ? 'Yes' : 'No'],
-          ['FOUNDATION CRACKS', elevationCondition.foundationCracks ? 'Yes' : 'No'],
+          [
+            'FOUNDATION CRACKS',
+            elevationCondition.foundationCracks ? 'Yes' : 'No'
+          ],
           ['WALL CRACKS', elevationCondition.wallCracks ? 'Yes' : 'No'],
           ['CHIMNEY DAMAGE', elevationCondition.chimneyDamage],
           ['WATER DAMAGE', elevationCondition.waterDamage ? 'Yes' : 'No'],
-          ['UNDER RENOVATION', elevationCondition.underRenovation ? 'Yes' : 'No'],
-          ['MAIN BREAKER PANEL', elevationCondition.mainBreakerPanel ? 'Yes' : 'No'],
-          ['WATER SPICKET DAMAGE', elevationCondition.waterSpicketDamage ? 'Yes' : 'No'],
+          [
+            'UNDER RENOVATION',
+            elevationCondition.underRenovation ? 'Yes' : 'No'
+          ],
+          [
+            'MAIN BREAKER PANEL',
+            elevationCondition.mainBreakerPanel ? 'Yes' : 'No'
+          ],
+          [
+            'WATER SPICKET DAMAGE',
+            elevationCondition.waterSpicketDamage ? 'Yes' : 'No'
+          ],
           ['DOOR DAMAGE', elevationCondition.doorDamage ? 'Yes' : 'No'],
         ], font, boldFont),
       ],
@@ -975,7 +1002,10 @@ static pw.Widget _buildNewHeader({
           ['DEBRIS ON ROOF', roofCondition.debrisOnRoof ? 'Yes' : 'No'],
           ['SOLAR PANEL', roofCondition.solarPanel ? 'Yes' : 'No'],
           ['EXPOSED FELT', roofCondition.exposedFelt ? 'Yes' : 'No'],
-          ['MISSING SHINGLES/TILES', roofCondition.missingShingles ? 'Yes' : 'No'],
+          [
+            'MISSING SHINGLES/TILES',
+            roofCondition.missingShingles ? 'Yes' : 'No'
+          ],
           ['PRIOR REPAIRS', roofCondition.priorRepairs ? 'Yes' : 'No'],
           ['CURLING SHINGLES', roofCondition.curlingShingles ? 'Yes' : 'No'],
           ['ALGAE/MOSS', roofCondition.algaeMoss ? 'Yes' : 'No'],
@@ -1033,18 +1063,42 @@ static pw.Widget _buildNewHeader({
         pw.SizedBox(height: 10),
         _buildTable([
           ['FIELD', 'VALUE'],
-          ['BOARDED DOORS/WINDOWS', dwellingHazards.boardedDoorsWindows ? 'Yes' : 'No'],
-          ['OVERGROWN VEGETATION', dwellingHazards.overgrownVegetation ? 'Yes' : 'No'],
-          ['ABANDONED VEHICLES', dwellingHazards.abandonedVehicles ? 'Yes' : 'No'],
+          [
+            'BOARDED DOORS/WINDOWS',
+            dwellingHazards.boardedDoorsWindows ? 'Yes' : 'No'
+          ],
+          [
+            'OVERGROWN VEGETATION',
+            dwellingHazards.overgrownVegetation ? 'Yes' : 'No'
+          ],
+          [
+            'ABANDONED VEHICLES',
+            dwellingHazards.abandonedVehicles ? 'Yes' : 'No'
+          ],
           ['MISSING/DAMAGE STEPS', dwellingHazards.missingSteps ? 'Yes' : 'No'],
-          ['MISSING/DAMAGE RAILING', dwellingHazards.missingRailing ? 'Yes' : 'No'],
+          [
+            'MISSING/DAMAGE RAILING',
+            dwellingHazards.missingRailing ? 'Yes' : 'No'
+          ],
           ['SIDING DAMAGE', dwellingHazards.sidingDamage ? 'Yes' : 'No'],
-          ['HURRICANE SHUTTERS', dwellingHazards.hurricaneShutters ? 'Yes' : 'No'],
+          [
+            'HURRICANE SHUTTERS',
+            dwellingHazards.hurricaneShutters ? 'Yes' : 'No'
+          ],
           ['TREE/BRANCH', dwellingHazards.treeBranch ? 'Yes' : 'No'],
-          ['CHIMNEY THROUGH ROOF', dwellingHazards.chimneyThroughRoof ? 'Yes' : 'No'],
-          ['FIREPLACE/PIT OUTSIDE', dwellingHazards.fireplacePit ? 'Yes' : 'No'],
+          [
+            'CHIMNEY THROUGH ROOF',
+            dwellingHazards.chimneyThroughRoof ? 'Yes' : 'No'
+          ],
+          [
+            'FIREPLACE/PIT OUTSIDE',
+            dwellingHazards.fireplacePit ? 'Yes' : 'No'
+          ],
           ['SECURITY BARS', dwellingHazards.securityBars ? 'Yes' : 'No'],
-          ['FACIA/SOFFIT DAMAGE', dwellingHazards.faciaSoffitDamage ? 'Yes' : 'No'],
+          [
+            'FACIA/SOFFIT DAMAGE',
+            dwellingHazards.faciaSoffitDamage ? 'Yes' : 'No'
+          ],
         ], font, boldFont),
       ],
     );
@@ -1075,7 +1129,10 @@ static pw.Widget _buildNewHeader({
           ['DOG', possibleHazards.dog ? 'Yes' : 'No'],
           ['DOG TYPE', possibleHazards.dogType],
           ['DOG SIGN', possibleHazards.dogSign ? 'Yes' : 'No'],
-          ['SKATEBOARD OR BIKE RAMP', possibleHazards.skateboardRamp ? 'Yes' : 'No'],
+          [
+            'SKATEBOARD OR BIKE RAMP',
+            possibleHazards.skateboardRamp ? 'Yes' : 'No'
+          ],
           ['TREE HOUSE', possibleHazards.treeHouse ? 'Yes' : 'No'],
           ['DEBRIS IN YARD', possibleHazards.debrisInYard ? 'Yes' : 'No'],
         ], font, boldFont),
@@ -1112,37 +1169,44 @@ static pw.Widget _buildNewHeader({
     );
   }
 
-  static pw.Widget _buildTable(List<List<String>> data, pw.Font font, pw.Font boldFont) {
+  static pw.Widget _buildTable(
+      List<List<String>> data, pw.Font font, pw.Font boldFont) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black),
       children: [
         // Header Row with Styling
         pw.TableRow(
           decoration: pw.BoxDecoration(color: PdfColors.grey300),
-          children: data[0].map((header) => pw.Padding(
-            padding: pw.EdgeInsets.all(8),
-            child: pw.Text(
-              header,
-              style: pw.TextStyle(font: boldFont, fontSize: 12, color: PdfColors.black),
-            ),
-          )).toList(),
+          children: data[0]
+              .map((header) => pw.Padding(
+                    padding: pw.EdgeInsets.all(8),
+                    child: pw.Text(
+                      header,
+                      style: pw.TextStyle(
+                          font: boldFont, fontSize: 12, color: PdfColors.black),
+                    ),
+                  ))
+              .toList(),
         ),
 
         // Data Rows
         ...data.sublist(1).map((row) => pw.TableRow(
-          children: row.map((cell) => pw.Padding(
-            padding: pw.EdgeInsets.all(8),
-            child: pw.Text(
-              cell,
-              style: pw.TextStyle(font: font, fontSize: 10),
-            ),
-          )).toList(),
-        )),
+              children: row
+                  .map((cell) => pw.Padding(
+                        padding: pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          cell,
+                          style: pw.TextStyle(font: font, fontSize: 10),
+                        ),
+                      ))
+                  .toList(),
+            )),
       ],
     );
   }
 
-  static pw.Widget _buildDetailRow(String label, String value, pw.Font font, pw.Font boldFont) {
+  static pw.Widget _buildDetailRow(
+      String label, String value, pw.Font font, pw.Font boldFont) {
     return pw.Container(
       margin: pw.EdgeInsets.only(bottom: 8),
       child: pw.Row(

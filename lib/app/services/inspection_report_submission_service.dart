@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 class InspectionReportService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
   final String _collection = 'inspection_reports';
   final RxBool _isSubmitting = false.obs;
   final RxString _error = ''.obs;
@@ -39,7 +39,7 @@ class InspectionReportService extends GetxService {
         throw Exception('Questionnaire data is required');
       }
 
-      // Create report data structure
+      // Create report data structure (without report_id)
       final reportData = _createReportData(
         questionnaireData: questionnaireData,
         imageUrlsByCategory: imageUrlsByCategory ?? {},
@@ -48,6 +48,9 @@ class InspectionReportService extends GetxService {
 
       // Submit to Firestore
       final docRef = await _firestore.collection(_collection).add(reportData);
+
+      // Update the document to set report_id to the Firestore document ID
+      await docRef.update({'report_id': docRef.id});
 
       Get.snackbar(
         'Success',
@@ -60,7 +63,7 @@ class InspectionReportService extends GetxService {
 
       return docRef.id;
     } catch (e) {
-      _error.value = 'Failed to submit inspection report: ${e.toString()}';
+      _error.value = 'Failed to submit inspection report:  ${e.toString()}';
       Get.snackbar(
         'Error',
         _error.value,
@@ -83,7 +86,7 @@ class InspectionReportService extends GetxService {
   }) {
     return {
       // Basic metadata
-      'report_id': _generateReportId(),
+      // 'report_id': _generateReportId(), // Removed, will be set after doc creation
       'inspector_id': currentUserId,
       'status': 'submitted',
       'created_at': FieldValue.serverTimestamp(),
@@ -99,128 +102,6 @@ class InspectionReportService extends GetxService {
       // Summary statistics
       'summary': Summary,
     };
-  }
-
-  // // Extract inspector information from questionnaire data
-  // Map<String, dynamic> _extractInspectorInfo(Map<String, dynamic> data) {
-  //   return {
-  //     'name': data['inspector_name'] ?? '',
-  //     'drone_number': data['drone_number'] ?? '',
-  //     'policy_number': data['policy_number'] ?? '',
-  //     'inspection_date': data['inspection_date'] ?? '',
-  //   };
-  // }
-
-  // // Extract insured information from questionnaire data
-  // Map<String, dynamic> _extractInsuredInfo(Map<String, dynamic> data) {
-  //   return {
-  //     'name': data['insured_name'] ?? '',
-  //     'street_address': data['insured_address'] ?? '',
-  //     'state': data['insured_state'] ?? '',
-  //     'zip_code': data['insured_zip'] ?? '',
-  //   };
-  // }
-
-  // // Extract property details from questionnaire data
-  // Map<String, dynamic> _extractPropertyDetails(Map<String, dynamic> data) {
-  //   return {
-  //     'neighborhood': data['neighborhood'] ?? '',
-  //     'area_economy': data['area_economy'] ?? '',
-  //     'property_vacant': data['property_vacant'] ?? '',
-  //     'dwelling_type': data['dwelling_type'] ?? '',
-  //     'year_built': data['year_built'] ?? '',
-  //     'foundation_type': data['foundation_type'] ?? '',
-  //     'primary_construction': data['primary_construction'] ?? '',
-  //     'number_of_stories': data['number_of_stories'] ?? '',
-  //     'living_area_sf': data['living_area_sf'] ?? '',
-  //     'lot_size': data['lot_size'] ?? '',
-  //     'overall_condition': data['overall_elevation_condition'] ?? '',
-  //     'roof_condition': data['overall_roof_condition'] ?? '',
-  //   };
-  // }
-
-  // // Generate summary statistics
-  // Map<String, dynamic> _generateSummary(
-  //   Map<String, dynamic> questionnaireData,
-  //   Map<String, List<String>> imageUrlsByCategory,
-  // ) {
-  //   int totalQuestions = 94;
-  //   int answeredQuestions = questionnaireData.entries
-  //       .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
-  //       .length;
-    
-  //   int totalImages = imageUrlsByCategory.values
-  //       .fold(0, (sum, urls) => sum + urls.length);
-    
-  //   // Count hazards and issues
-  //   int hazardCount = _countHazards(questionnaireData);
-  //   int issueCount = _countIssues(questionnaireData);
-    
-  //   return {
-  //     'total_questions': totalQuestions,
-  //     'answered_questions': answeredQuestions,
-  //     'completion_percentage': (answeredQuestions / totalQuestions * 100).round(),
-  //     'total_images': totalImages,
-  //     'hazard_count': hazardCount,
-  //     'issue_count': issueCount,
-  //     'categories_with_images': imageUrlsByCategory.keys.toList(),
-  //   };
-  // }
-
-  // // Count identified hazards
-  // int _countHazards(Map<String, dynamic> data) {
-  //   int count = 0;
-  //   final hazardFields = [
-  //     'boarded_doors_windows',
-  //     'overgrown_vegetation',
-  //     'abandoned_vehicles',
-  //     'missing_damaged_steps',
-  //     'missing_damage_railing',
-  //     'tree_branch',
-  //     'swimming_pool',
-  //     'trampoline',
-  //     'dog',
-  //   ];
-    
-  //   for (final field in hazardFields) {
-  //     if (data[field] == 'Yes') count++;
-  //   }
-    
-  //   return count;
-  // }
-
-  // // Count structural issues
-  // int _countIssues(Map<String, dynamic> data) {
-  //   int count = 0;
-  //   final issueFields = [
-  //     'siding_damage',
-  //     'peeling_paint',
-  //     'mildew_moss',
-  //     'window_damage',
-  //     'foundation_cracks',
-  //     'wall_cracks',
-  //     'chimney_damage',
-  //     'water_damage',
-  //     'door_damage',
-  //     'missing_shingles_tiles',
-  //     'curling_shingles',
-  //     'broken_cracked_tiles',
-  //     'uneven_decking',
-  //   ];
-    
-  //   for (final field in issueFields) {
-  //     if (data[field] == 'Yes') count++;
-  //   }
-    
-  //   return count;
-  // }
-
-
-  // Generate unique report ID
-  String _generateReportId() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final random = DateTime.now().microsecond;
-    return 'RPT_${timestamp}_$random';
   }
 
   // Get inspection report by ID
@@ -241,7 +122,7 @@ class InspectionReportService extends GetxService {
   Future<List<Map<String, dynamic>>> getInspectionReports() async {
     try {
       if (currentUserId == null) return [];
-      
+
       final query = await _firestore
           .collection(_collection)
           .where('inspector_id', isEqualTo: currentUserId)
@@ -258,5 +139,4 @@ class InspectionReportService extends GetxService {
       return [];
     }
   }
-
 }

@@ -460,11 +460,20 @@ class InspectionReportsController extends GetxController {
 
   /// Generate dynamic PDF for a specific report
   Future<String?> generateDynamicPDF(String reportId) async {
-    final report = localReports.firstWhereOrNull((r) => r.id == reportId);
+    // First check in local reports
+    InspectionReportModel? report = localReports.firstWhereOrNull((r) => r.id == reportId);
+    
+    // If not found in local, check in cloud reports
     if (report == null) {
-      print('[PDF] Report not found: $reportId');
+      report = cloudReports.firstWhereOrNull((r) => r.id == reportId);
+    }
+    
+    if (report == null) {
+      print('[PDF] Report not found in local or cloud reports: $reportId');
       return null;
     }
+    
+    print('[PDF] Found report in ${localReports.any((r) => r.id == reportId) ? 'local' : 'cloud'} storage: $reportId');
 
     try {
       print('[PDF] Generating dynamic PDF for report: $reportId');
